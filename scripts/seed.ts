@@ -113,6 +113,8 @@ async function main() {
         username: "challenger_arc",
         name: "Arun V.",
         passwordHash,
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
         profile: {
           create: {
             avatar: "/assets/images/avatar_3.png",

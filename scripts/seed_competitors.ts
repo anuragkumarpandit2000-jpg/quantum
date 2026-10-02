@@ -123,6 +123,8 @@ async function seedCompetitors() {
           username: c.username,
           name: c.name,
           passwordHash: pwd,
+          emailVerified: true,
+          emailVerifiedAt: new Date(),
           profile: {
             create: {
               avatar: c.avatar,
