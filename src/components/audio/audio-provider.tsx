@@ -82,16 +82,41 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     };
 
-    window.addEventListener("click", handleFirstInteraction, { once: true });
-    window.addEventListener("keydown", handleFirstInteraction, { once: true });
+    // Global listener: When any other video or audio element starts playing on page (e.g. proof video, motivational video, speech TTS),
+    // automatically pause or duck background music, and resume when finished!
+    const handleOtherMediaPlay = (e: Event) => {
+      if (e.target !== audioRef.current) {
+        if (audioRef.current && !audioRef.current.paused) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+          (audioRef.current as any).__pausedByExtraSound = true;
+        }
+      }
+    };
+
+    const handleOtherMediaStop = (e: Event) => {
+      if (e.target !== audioRef.current) {
+        if (audioRef.current && (audioRef.current as any).__pausedByExtraSound && soundEnabled) {
+          (audioRef.current as any).__pausedByExtraSound = false;
+          audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+        }
+      }
+    };
+
+    document.addEventListener("play", handleOtherMediaPlay, true);
+    document.addEventListener("pause", handleOtherMediaStop, true);
+    document.addEventListener("ended", handleOtherMediaStop, true);
 
     return () => {
       audio.pause();
       audio.src = "";
       window.removeEventListener("click", handleFirstInteraction);
       window.removeEventListener("keydown", handleFirstInteraction);
+      document.removeEventListener("play", handleOtherMediaPlay, true);
+      document.removeEventListener("pause", handleOtherMediaStop, true);
+      document.removeEventListener("ended", handleOtherMediaStop, true);
     };
-  }, []);
+  }, [soundEnabled]);
 
   const unlockAudio = () => {
     if (audioRef.current) {

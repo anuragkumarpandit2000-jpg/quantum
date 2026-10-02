@@ -597,65 +597,84 @@ export default function AdminPage() {
         )}
 
         {/* ====================================================================
-            TAB 2: VISUAL PROOFS MODERATION
+            TAB 2: VISUAL PROOFS MODERATION (9:16 Format)
             ==================================================================== */}
         {activeTab === "proofs" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {proofs.length === 0 ? (
               <div className="col-span-full py-12 text-center text-slate-500 font-mono">
                 No visual proofs uploaded yet.
               </div>
             ) : (
-              proofs.map((p) => (
-                <div
-                  key={p.id}
-                  className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 space-y-3 flex flex-col justify-between"
-                >
-                  <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="text-white font-bold">{p.user.name}</span>
-                    <span className="text-cyan-400">Day {p.dayNumber}</span>
-                  </div>
+              proofs.map((p) => {
+                const isVid =
+                  p.fileUrl.endsWith(".mp4") ||
+                  p.fileUrl.startsWith("data:video");
+                return (
+                  <div
+                    key={p.id}
+                    className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2.5 flex flex-col justify-between"
+                  >
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="text-white font-bold truncate max-w-[100px]">{p.user.name}</span>
+                      <span className="text-cyan-400 text-[11px] font-bold">Day {p.dayNumber}</span>
+                    </div>
 
-                  <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-slate-800">
-                    <Image src={p.fileUrl} alt={p.caption} fill className="object-cover" />
-                  </div>
+                    <div className="relative w-full aspect-[9/16] rounded-xl overflow-hidden bg-black border border-slate-800">
+                      {isVid ? (
+                        <video
+                          src={p.fileUrl}
+                          loop
+                          muted
+                          playsInline
+                          autoPlay
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Image src={p.fileUrl} alt={p.caption} fill className="object-cover" />
+                      )}
+                      <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-slate-950/80 text-[9px] font-mono text-cyan-300">
+                        9:16
+                      </div>
+                    </div>
 
-                  <p className="text-xs text-slate-300 font-sans line-clamp-2">
-                    &ldquo;{p.caption}&rdquo;
-                  </p>
+                    <p className="text-xs text-slate-300 font-sans line-clamp-2">
+                      &ldquo;{p.caption}&rdquo;
+                    </p>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 font-mono text-xs">
-                    <span className={cn(p.isPublic ? "text-emerald-400" : "text-amber-400")}>
-                      {p.isPublic ? "🌐 Public" : "🔒 Private"}
-                    </span>
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 font-mono text-xs">
+                      <span className={cn(p.isPublic ? "text-emerald-400" : "text-amber-400", "text-[11px]")}>
+                        {p.isPublic ? "🌐 Public" : "🔒 Private"}
+                      </span>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          executeAdminAction("toggle_proof_visibility", {
-                            proofId: p.id,
-                            isPublic: !p.isPublic,
-                          })
-                        }
-                        className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px]"
-                      >
-                        {p.isPublic ? "Make Private" : "Make Public"}
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          if (confirm("Delete this proof item?")) {
-                            executeAdminAction("delete_proof", { proofId: p.id });
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() =>
+                            executeAdminAction("toggle_proof_visibility", {
+                              proofId: p.id,
+                              isPublic: !p.isPublic,
+                            })
                           }
-                        }}
-                        className="p-1 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                          className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px]"
+                        >
+                          {p.isPublic ? "Private" : "Public"}
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (confirm("Delete this proof item?")) {
+                              executeAdminAction("delete_proof", { proofId: p.id });
+                            }
+                          }}
+                          className="p-1 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}

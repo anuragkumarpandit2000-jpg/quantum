@@ -59,6 +59,7 @@ import QuantumCompletionCertificate, {
 } from "@/components/certificate/quantum-completion-certificate";
 import ArcCompletionCelebration from "@/components/certificate/arc-completion-celebration";
 import { LevelUpModal, LevelUpData } from "@/components/ui/level-up-modal";
+import { LiveExecutionProofSection } from "@/components/dashboard/live-execution-proof-section";
 import ThreeDWallCalendar from "@/components/ui/three-dwall-calendar";
 import DraggableWidgetGrid, { WidgetItem } from "@/components/ui/draggable-widget-grid";
 import { useAudio } from "@/components/audio/audio-provider";
@@ -73,7 +74,7 @@ import {
 import MobileRotatingShowcase from "@/components/ui/mobile-rotating-showcase";
 import QuantumMobileExperience from "@/components/landing/quantum-mobile-experience";
 import AboutSection from "@/components/landing/about-section";
-import { cn, formatXP, calculateLevel } from "@/lib/utils";
+import { cn, formatXP, calculateLevel, getActiveWinterArcDay, getTimeUntilMidnight } from "@/lib/utils";
 
 type NavTab =
   | "TASK"
@@ -236,6 +237,7 @@ export default function DashboardPage() {
   const [uploadDay, setUploadDay] = useState(1);
   const [uploadFileUrl, setUploadFileUrl] = useState("");
   const [uploadIsPublic, setUploadIsPublic] = useState(true);
+  const [uploadFileType, setUploadFileType] = useState<"image" | "video">("image");
   const [isProofUploading, setIsProofUploading] = useState(false);
   const proofFileRef = useRef<HTMLInputElement | null>(null);
 
@@ -280,6 +282,35 @@ export default function DashboardPage() {
   const [isSurpriseTrackerOpen, setIsSurpriseTrackerOpen] = useState(false);
   const [forceUnsealedTracker, setForceUnsealedTracker] = useState(false);
   const profileFileRef = useRef<HTMLInputElement | null>(null);
+
+  // 24-Hour Protocol Clock & Midnight Reset State
+  const [currentTimeFormatted, setCurrentTimeFormatted] = useState("");
+  const [timeUntilMidnightFormatted, setTimeUntilMidnightFormatted] = useState("");
+  const [activeWinterArcDay, setActiveWinterArcDay] = useState(1);
+
+  // 24-Hour live clock ticking & active day calculation (12:00 AM Midnight Reset)
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      setCurrentTimeFormatted(`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);
+
+      const { formatted } = getTimeUntilMidnight();
+      setTimeUntilMidnightFormatted(formatted);
+
+      if (user?.profile?.startDate || user?.createdAt) {
+        const day = getActiveWinterArcDay(user.profile?.startDate || user.createdAt);
+        setActiveWinterArcDay(day);
+      } else {
+        // New user login cleanly initializes to Day 1
+        setActiveWinterArcDay(1);
+      }
+    };
+
+    updateClock();
+    const interval = setInterval(updateClock, 1000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Trigger surprise physical habit tracker popup on first entry into command center
   useEffect(() => {
@@ -355,17 +386,40 @@ export default function DashboardPage() {
     }
   };
 
-  // Direct Gallery Selection for Daily Proof of Work
+  // Direct Gallery Selection for Daily Proof of Work (9:16 Photo or Video)
   const handleProofGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
       setIsProofUploading(true);
-      const compressedDataUrl = await compressImageFile(file, 1280, 960, 0.85, false);
-      setUploadFileUrl(compressedDataUrl);
+      if (file.type.startsWith("video/")) {
+        // Video file support for 9:16 vertical reels/stories
+        if (file.size > 50 * 1024 * 1024) {
+          alert("Video size exceeds 50MB limit. Please select a shorter vertical clip.");
+          setIsProofUploading(false);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (uploadEvent) => {
+          const result = uploadEvent.target?.result as string;
+          setUploadFileUrl(result);
+          setUploadFileType("video");
+          setIsProofUploading(false);
+        };
+        reader.onerror = () => {
+          setIsProofUploading(false);
+        };
+        reader.readAsDataURL(file);
+        return;
+      } else {
+        // 9:16 target vertical image compression (1080x1920)
+        const compressedDataUrl = await compressImageFile(file, 1080, 1920, 0.85, false);
+        setUploadFileUrl(compressedDataUrl);
+        setUploadFileType("image");
+      }
     } catch (err) {
-      console.error("Proof photo upload error:", err);
+      console.error("Proof photo/video upload error:", err);
     } finally {
       setIsProofUploading(false);
       if (e.target) e.target.value = "";
@@ -731,6 +785,7 @@ export default function DashboardPage() {
           dayNumber: uploadDay,
           caption: uploadCaption,
           fileUrl: uploadFileUrl || "/assets/images/background.png",
+          fileType: uploadFileType,
           isPublic: uploadIsPublic,
         }),
       });
@@ -752,6 +807,7 @@ export default function DashboardPage() {
         }
         setUploadCaption("");
         setUploadFileUrl("");
+        setUploadFileType("image");
         setIsUploadModalOpen(false);
       }
     } catch (err) {
@@ -857,10 +913,11 @@ export default function DashboardPage() {
   }
 
   const userXP = user?.profile?.totalXP || 0;
-  const { level, tier, progressPercent } = calculateLevel(userXP);
   const currentStreak = user?.streak?.currentStreak || 0;
   const longestStreak = user?.streak?.longestStreak || 0;
   const consistencyRate = user?.streak?.consistencyRate || 0;
+  const levelInfo = calculateLevel(currentStreak);
+  const { level, tier, progressPercent } = levelInfo;
 
   return (
     <div className="relative min-h-screen bg-[#02050f] text-slate-100 flex overflow-hidden selection:bg-sky-500 selection:text-slate-950 font-sans">
@@ -1042,7 +1099,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick HUD Metrics */}
-          <div className="flex items-center gap-3 sm:gap-4 font-mono text-xs">
+          <div className="flex items-center gap-2.5 sm:gap-3 font-mono text-xs">
             {(user?.isAdmin || user?.email?.toLowerCase() === "anuragkumar.pandit2000@gmail.com" || user?.role === "ADMIN") && (
               <Link
                 href="/admin"
@@ -1052,6 +1109,24 @@ export default function DashboardPage() {
                 <span>ROOT ADMIN</span>
               </Link>
             )}
+
+            {/* 24-Hour Protocol Clock & Midnight Reset Countdown */}
+            <div className="hidden lg:flex items-center gap-2 bg-slate-900/60 border border-sky-500/30 px-3 py-1 rounded-lg backdrop-blur-md text-xs font-mono">
+              <Clock size={13} className="text-sky-400 animate-pulse" />
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400">24H:</span>
+                <span className="text-white font-bold">{currentTimeFormatted || "00:00:00"}</span>
+                <span className="text-slate-600">|</span>
+                <span className="text-cyan-300 font-bold">12AM RESET IN {timeUntilMidnightFormatted || "24:00:00"}</span>
+              </div>
+            </div>
+
+            {/* Active Day & Calibrated Level */}
+            <div className="flex items-center gap-1.5 text-sky-300 bg-sky-950/30 border border-sky-500/30 px-3 py-1 rounded-lg backdrop-blur-md">
+              <Shield size={13} className="text-sky-400" />
+              <span className="font-bold">DAY {activeWinterArcDay}</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-200">LVL {level}</span>
+            </div>
 
             {/* Streak */}
             <div className="flex items-center gap-1.5 text-amber-400 bg-amber-950/20 border border-amber-500/20 px-3 py-1 rounded-lg backdrop-blur-md">
@@ -1147,44 +1222,84 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {/* Progress Summary Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono">
+              {/* Progress Summary Cards: 24h Clock, Streak, Level, and XP */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono">
+                {/* Card 1: 24-Hour Protocol Clock & Midnight Reset */}
+                <div className="p-5 rounded-xl bg-slate-950/35 backdrop-blur-xl border border-sky-500/30 shadow-xl space-y-1.5 hover:border-sky-400/60 transition">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-sky-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                      <Clock size={12} className="text-sky-400 animate-pulse" />
+                      24H PROTOCOL CLOCK
+                    </span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono">
+                      12AM RESET
+                    </span>
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-extrabold text-cyan-300 font-mono tracking-wider">
+                    {timeUntilMidnightFormatted || "24:00:00"}
+                  </div>
+                  <div className="text-[11px] text-slate-300 flex items-center justify-between">
+                    <span>ACTIVE: <strong className="text-white">DAY {activeWinterArcDay} OF 90</strong></span>
+                    <span className="text-slate-400 text-[10px]">{currentTimeFormatted}</span>
+                  </div>
+                </div>
+
+                {/* Card 2: Active Winter Arc Streak */}
                 <div className="p-5 rounded-xl bg-slate-950/35 backdrop-blur-xl border border-white/10 shadow-xl space-y-1.5 hover:border-amber-500/30 transition">
                   <div className="text-[10px] text-slate-400 uppercase tracking-widest">
                     ACTIVE WINTER ARC STREAK
                   </div>
-                  <div className="text-3xl font-extrabold text-amber-400 flex items-center gap-2">
+                  <div className="text-2xl sm:text-3xl font-extrabold text-amber-400 flex items-center gap-2">
                     <Flame size={24} /> {currentStreak} Days
                   </div>
                   <div className="text-[11px] text-slate-400">
-                    Longest Streak: {longestStreak} Days
+                    Longest: {longestStreak} Days • Rate: {consistencyRate}%
                   </div>
                 </div>
 
-                <div className="p-5 rounded-xl bg-slate-950/35 backdrop-blur-xl border border-white/10 shadow-xl space-y-1.5 hover:border-emerald-500/30 transition">
-                  <div className="text-[10px] text-slate-400 uppercase tracking-widest">
-                    ARC COMPLETION CONSISTENCY
-                  </div>
-                  <div className="text-3xl font-extrabold text-emerald-400">
-                    {consistencyRate}%
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    Verified through database checks
-                  </div>
-                </div>
-
+                {/* Card 3: Winter Arc Level (Ladder by Streak Days) */}
                 <div className="p-5 rounded-xl bg-slate-950/35 backdrop-blur-xl border border-white/10 shadow-xl space-y-1.5 hover:border-sky-500/30 transition">
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-widest">
+                    <span>WINTER ARC LEVEL</span>
+                    <span className="text-sky-400 font-bold truncate max-w-[120px]">{tier}</span>
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2">
+                    <Award size={24} className="text-sky-400" />
+                    <span>LEVEL {level}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                      <span>{level === 0 ? "Complete Day 01 for Lvl 1" : `${currentStreak} / ${levelInfo.nextDays} Days`}</span>
+                      <span>{progressPercent}%</span>
+                    </div>
+                    <div className="w-full bg-slate-800/60 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-sky-400 h-full transition-all"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card 4: XP Advancement */}
+                <div className="p-5 rounded-xl bg-slate-950/35 backdrop-blur-xl border border-white/10 shadow-xl space-y-1.5 hover:border-emerald-500/30 transition">
                   <div className="text-[10px] text-slate-400 uppercase tracking-widest">
                     CURRENT XP ADVANCEMENT
                   </div>
-                  <div className="text-3xl font-extrabold text-sky-400">
+                  <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400">
                     {formatXP(userXP)} XP
                   </div>
-                  <div className="w-full bg-slate-800/60 h-1.5 rounded-full overflow-hidden mt-1">
-                    <div
-                      className="bg-sky-400 h-full transition-all"
-                      style={{ width: `${(userXP / 10000) * 100}%` }}
-                    />
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                      <span>TARGET: 10,000 XP</span>
+                      <span>{Math.min(100, Math.round((userXP / 10000) * 100))}%</span>
+                    </div>
+                    <div className="w-full bg-slate-800/60 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-emerald-400 h-full transition-all"
+                        style={{ width: `${Math.min(100, (userXP / 10000) * 100)}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1252,6 +1367,13 @@ export default function DashboardPage() {
                 initialHabits={habits}
                 onStatsUpdate={handleStatsUpdate}
                 onHabitsChange={handleHabitsChange}
+              />
+
+              {/* Dedicated Command Center Home Section: Live Execution Proofs (9:16 Vertical Stories Feed) */}
+              <LiveExecutionProofSection
+                onOpenUploadModal={() => setIsUploadModalOpen(true)}
+                currentUserId={user?.id}
+                onSelectProof={(p) => setViewingProof(p)}
               />
             </div>
           )}
@@ -1472,26 +1594,45 @@ export default function DashboardPage() {
                   <div className="text-xs">Take a photo of your training session or deep work desk to record Day 01.</div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                  {gallery.map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-2xl bg-slate-950/35 backdrop-blur-xl border border-white/10 overflow-hidden shadow-xl hover:border-sky-500/40 transition group flex flex-col justify-between"
-                    >
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {gallery.map((item) => {
+                    const isVid =
+                      item.fileType === "video" ||
+                      item.fileUrl.endsWith(".mp4") ||
+                      item.fileUrl.startsWith("data:video");
+                    return (
                       <div
-                        className="relative h-56 w-full bg-slate-900/50 overflow-hidden cursor-pointer"
-                        onClick={() => setViewingProof(item)}
+                        key={item.id}
+                        className="rounded-2xl bg-slate-950/35 backdrop-blur-xl border border-white/10 overflow-hidden shadow-xl hover:border-sky-500/40 transition group flex flex-col justify-between"
                       >
-                        <Image
-                          src={item.fileUrl}
-                          alt={item.caption}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-md text-[11px] font-mono text-sky-400 border border-white/10 shadow-sm">
-                          DAY {String(item.dayNumber).padStart(2, "0")} PROOF
+                        <div
+                          className="relative aspect-[9/16] w-full bg-slate-950 overflow-hidden cursor-pointer"
+                          onClick={() => setViewingProof(item)}
+                        >
+                          {isVid ? (
+                            <video
+                              src={item.fileUrl}
+                              loop
+                              muted
+                              playsInline
+                              autoPlay
+                              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <Image
+                              src={item.fileUrl}
+                              alt={item.caption}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          )}
+                          <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-md text-[11px] font-mono text-sky-400 border border-white/10 shadow-sm">
+                            DAY {String(item.dayNumber).padStart(2, "0")} PROOF
+                          </div>
+                          <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-mono text-cyan-300 border border-cyan-400/30 shadow-sm">
+                            {isVid ? "9:16 VIDEO" : "9:16 PHOTO"}
+                          </div>
                         </div>
-                      </div>
                       <div className="p-4 space-y-3 font-mono flex-1 flex flex-col justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
@@ -1542,9 +1683,10 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  );
+                })}
+              </div>
+            )}
             </div>
           )}
 
@@ -2490,35 +2632,51 @@ export default function DashboardPage() {
                 />
               </div>
 
-              {/* Direct Gallery / Camera Photo Upload */}
+              {/* Direct Gallery / Camera Photo or Video Upload (9:16 Vertical) */}
               <div className="space-y-2">
-                <label className="text-slate-400 flex items-center justify-between">
-                  <span>PHOTO PROOF (DEVICE GALLERY / CAMERA)</span>
+                <label className="text-slate-400 flex items-center justify-between text-xs">
+                  <span>9:16 PROOF (DEVICE GALLERY / CAMERA / VIDEO)</span>
                   {uploadFileUrl && (
                     <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                      <Check size={12} /> PHOTO ATTACHED
+                      <Check size={12} /> {uploadFileType === "video" ? "9:16 VIDEO ATTACHED" : "9:16 PHOTO ATTACHED"}
                     </span>
                   )}
                 </label>
 
-                {/* Hidden File Input for Device Gallery */}
+                {/* Hidden File Input for Device Gallery / Camera (Image or Video) */}
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/*,video/*"
                   ref={proofFileRef}
                   onChange={handleProofGalleryUpload}
                   className="hidden"
                 />
 
                 {uploadFileUrl ? (
-                  <div className="relative rounded-xl border border-sky-500/40 overflow-hidden bg-slate-900/60 p-2.5 space-y-2">
-                    <div className="relative h-44 w-full rounded-lg overflow-hidden bg-slate-950">
-                      <Image
-                        src={uploadFileUrl}
-                        alt="Proof Preview"
-                        fill
-                        className="object-cover"
-                      />
+                  <div className="relative rounded-2xl border border-sky-500/40 overflow-hidden bg-slate-900/60 p-3 space-y-3">
+                    <div className="relative w-44 aspect-[9/16] mx-auto rounded-xl overflow-hidden bg-slate-950 border border-white/10 shadow-lg">
+                      {uploadFileType === "video" ||
+                      uploadFileUrl.endsWith(".mp4") ||
+                      uploadFileUrl.startsWith("data:video") ? (
+                        <video
+                          src={uploadFileUrl}
+                          controls
+                          autoPlay
+                          loop
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Image
+                          src={uploadFileUrl}
+                          alt="Proof Preview"
+                          fill
+                          className="object-cover"
+                        />
+                      )}
+                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-slate-950/80 text-[9px] font-mono text-cyan-300 border border-cyan-400/30">
+                        9:16 {uploadFileType.toUpperCase()}
+                      </div>
                     </div>
                     <div className="flex items-center justify-between pt-1">
                       <span className="text-[10px] text-sky-400 font-mono flex items-center gap-1">
@@ -2533,13 +2691,16 @@ export default function DashboardPage() {
                           disabled={isProofUploading}
                           className="h-7 text-[10px] border-white/10 gap-1"
                         >
-                          <Camera size={12} /> Change Photo
+                          <Camera size={12} /> Change Media
                         </Button>
                         <Button
                           type="button"
                           variant="destructive"
                           size="sm"
-                          onClick={() => setUploadFileUrl("")}
+                          onClick={() => {
+                            setUploadFileUrl("");
+                            setUploadFileType("image");
+                          }}
                           className="h-7 text-[10px] gap-1"
                         >
                           <Trash2 size={12} /> Remove
@@ -2550,7 +2711,7 @@ export default function DashboardPage() {
                 ) : (
                   <div
                     onClick={() => proofFileRef.current?.click()}
-                    className="border-2 border-dashed border-white/15 hover:border-sky-400/50 rounded-xl p-6 text-center cursor-pointer transition bg-slate-900/30 hover:bg-slate-900/50 space-y-2 group"
+                    className="border-2 border-dashed border-white/15 hover:border-sky-400/50 rounded-2xl p-6 text-center cursor-pointer transition bg-slate-900/30 hover:bg-slate-900/50 space-y-2 group"
                   >
                     <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-400/30 flex items-center justify-center mx-auto text-sky-400 group-hover:scale-110 transition-transform">
                       {isProofUploading ? (
@@ -2561,10 +2722,10 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <div className="font-bold text-white text-xs">
-                        {isProofUploading ? "PROCESSING PHOTO..." : "CHOOSE PHOTO FROM GALLERY / CAMERA"}
+                        {isProofUploading ? "PROCESSING 9:16 MEDIA..." : "CHOOSE 9:16 PHOTO OR VIDEO FROM GALLERY"}
                       </div>
                       <div className="text-[10px] text-slate-400 mt-0.5">
-                        Tap here to select an image from your device photos, gallery, or capture directly
+                        Tap here to select a vertical portrait (9:16) image or short video clip from your device
                       </div>
                     </div>
                   </div>
@@ -2603,15 +2764,15 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Modal: View Fullscreen Proof Lightbox */}
+      {/* Modal: View Fullscreen 9:16 Proof Lightbox */}
       {viewingProof && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
-          <div className="bg-slate-950/95 border border-white/20 rounded-2xl max-w-3xl w-full p-5 space-y-4 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-slate-950/95 border border-cyan-400/30 rounded-3xl max-w-sm w-full p-4 space-y-3 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+            <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
               <div className="flex items-center gap-2">
-                <ImageIcon className="text-sky-400 size-5" />
-                <span className="font-mono text-sm font-bold text-white tracking-wider">
-                  DAY {String(viewingProof.dayNumber).padStart(2, "0")} PROOF ARCHIVE
+                <ImageIcon className="text-sky-400 size-4" />
+                <span className="font-mono text-xs font-bold text-white tracking-wider">
+                  DAY {String(viewingProof.dayNumber).padStart(2, "0")} PROOF • 9:16
                 </span>
               </div>
               <button
@@ -2619,20 +2780,33 @@ export default function DashboardPage() {
                 onClick={() => setViewingProof(null)}
                 className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            <div className="relative w-full flex-1 min-h-[300px] max-h-[55vh] rounded-xl overflow-hidden bg-black/60 border border-white/10 flex items-center justify-center">
-              <Image
-                src={viewingProof.fileUrl}
-                alt={viewingProof.caption || "Proof"}
-                fill
-                className="object-contain"
-              />
+            <div className="relative w-full aspect-[9/16] max-h-[62vh] rounded-2xl overflow-hidden bg-black/80 border border-white/10 flex items-center justify-center mx-auto">
+              {viewingProof.fileType === "video" ||
+              viewingProof.fileUrl.endsWith(".mp4") ||
+              viewingProof.fileUrl.startsWith("data:video") ? (
+                <video
+                  src={viewingProof.fileUrl}
+                  controls
+                  autoPlay
+                  playsInline
+                  loop
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <Image
+                  src={viewingProof.fileUrl}
+                  alt={viewingProof.caption || "Proof"}
+                  fill
+                  className="object-contain"
+                />
+              )}
             </div>
 
-            <div className="space-y-2 font-mono text-xs border-t border-white/10 pt-3">
+            <div className="space-y-1.5 font-mono text-xs border-t border-white/10 pt-2.5">
               <div className="flex items-center justify-between text-[11px] text-slate-400">
                 <span className="text-sky-400 font-bold">{viewingProof.user?.name || user?.name || "Challenger"}</span>
                 <span>{new Date(viewingProof.createdAt).toLocaleDateString("en-US", {
@@ -2641,19 +2815,19 @@ export default function DashboardPage() {
                   year: "numeric",
                 }).toUpperCase()}</span>
               </div>
-              <p className="text-sm text-slate-200 font-sans leading-relaxed">{viewingProof.caption}</p>
+              <p className="text-xs text-slate-200 font-sans leading-relaxed">{viewingProof.caption}</p>
             </div>
 
             <div className="flex justify-between items-center pt-2 border-t border-white/10">
               <a
                 href={viewingProof.fileUrl}
-                download={`QUANTUM_DAY_${viewingProof.dayNumber}_PROOF.jpg`}
-                className="px-3.5 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-300 font-mono text-xs flex items-center gap-1.5 transition"
+                download={`QUANTUM_DAY_${viewingProof.dayNumber}_PROOF`}
+                className="px-3 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-300 font-mono text-[11px] flex items-center gap-1.5 transition"
               >
-                <Download size={13} />
-                <span>DOWNLOAD PROOF</span>
+                <Download size={12} />
+                <span>DOWNLOAD MEDIA</span>
               </a>
-              <Button variant="outline" size="sm" onClick={() => setViewingProof(null)}>
+              <Button variant="outline" size="sm" onClick={() => setViewingProof(null)} className="h-7 text-xs">
                 Close
               </Button>
             </div>

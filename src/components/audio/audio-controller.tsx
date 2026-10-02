@@ -101,35 +101,51 @@ export const AudioController: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Main unobtrusive control pill */}
-      <div className="flex items-center gap-1 bg-slate-950/80 hover:bg-slate-900/90 border border-slate-800/80 hover:border-sky-500/40 rounded-full px-2.5 py-1.5 shadow-lg backdrop-blur-md transition-all">
+      {/* Main unobtrusive control pill with rotating vinyl disc */}
+      <div className="flex items-center gap-1.5 bg-slate-950/90 hover:bg-slate-900 border border-cyan-500/40 hover:border-cyan-400 rounded-full px-3 py-1.5 shadow-[0_0_20px_rgba(6,182,212,0.25)] backdrop-blur-xl transition-all">
+        {/* Rotating Vinyl Disc */}
+        <div
+          onClick={toggleSound}
+          className="cursor-pointer flex items-center justify-center p-0.5"
+          title={soundEnabled && isPlaying ? "Click to Turn Off Music" : "Click to Turn On Music"}
+        >
+          <div
+            className={cn(
+              "w-5 h-5 flex items-center justify-center transition-transform",
+              soundEnabled && isPlaying ? "animate-[spin_3s_linear_infinite] text-cyan-400" : "text-slate-500"
+            )}
+          >
+            <Music size={15} />
+          </div>
+        </div>
+
         <button
           onClick={toggleSound}
-          className="p-1 text-slate-400 hover:text-sky-300 transition"
-          title={soundEnabled ? "Mute Ambient Audio" : "Enable Ambient Audio"}
+          className="p-1 text-slate-300 hover:text-cyan-300 transition flex items-center gap-1"
+          title={soundEnabled ? "Turn Off Music" : "Turn On Music"}
         >
           {soundEnabled && isPlaying ? (
-            <Volume2 size={15} className="text-sky-400" />
+            <Volume2 size={15} className="text-cyan-400" />
           ) : (
-            <VolumeX size={15} className="text-slate-500" />
+            <VolumeX size={15} className="text-rose-400" />
           )}
-        </button>
 
-        <span className="text-[10px] font-mono text-slate-400 px-1 hidden sm:inline">
-          {soundEnabled ? (
-            <span className="text-sky-400 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-              SOUND
-            </span>
-          ) : (
-            "OFF"
-          )}
-        </span>
+          <span
+            className={cn(
+              "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded transition",
+              soundEnabled && isPlaying
+                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/30"
+                : "bg-rose-500/20 text-rose-300 border border-rose-400/30"
+            )}
+          >
+            {soundEnabled && isPlaying ? "ON" : "OFF"}
+          </span>
+        </button>
 
         <button
           onClick={() => setExpanded(!expanded)}
-          className="p-1 text-slate-400 hover:text-slate-200 transition"
-          title="Audio Settings"
+          className="p-1 text-slate-400 hover:text-cyan-300 transition ml-0.5"
+          title="Audio Tracks & Volume"
         >
           <Sliders size={13} />
         </button>

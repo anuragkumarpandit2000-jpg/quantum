@@ -246,80 +246,84 @@ export const LiveProofFeedSection: React.FC = () => {
         </div>
 
         {/* ====================================================================
-            PROOFS GRID
+            PROOFS GRID (9:16 Vertical Ratio)
             ==================================================================== */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filteredProofs.map((item) => {
             const avatarUrl = item.user.profile?.avatar || "/assets/images/avatars/avatar_01.png";
             const currentClass = item.user.profile?.currentClass || "Initiate Challenger";
             const level = item.user.profile?.level || 1;
+            const isVideo =
+              item.fileType === "video" ||
+              item.fileUrl.endsWith(".mp4") ||
+              item.fileUrl.startsWith("data:video");
 
             return (
               <div
                 key={item.id}
                 onClick={() => setActiveModalProof(item)}
-                className="group relative rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-cyan-500/50 p-4 transition-all duration-300 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)] flex flex-col justify-between cursor-pointer"
+                className="group relative aspect-[9/16] w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 hover:border-cyan-400/60 shadow-lg hover:shadow-[0_0_30px_rgba(6,182,212,0.2)] transition-all duration-300 flex flex-col justify-between cursor-pointer"
               >
-                {/* Top: User info + Day Badge */}
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden border border-cyan-500/40 shrink-0">
-                      <Image
-                        src={avatarUrl}
-                        alt={item.user.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-white text-sm tracking-wide">
-                          {item.user.name}
-                        </span>
-                        <ShieldCheck size={13} className="text-cyan-400" />
-                      </div>
-                      <div className="text-[11px] font-mono text-cyan-400/80 flex items-center gap-1">
-                        <span>@{item.user.username}</span>
-                        <span>•</span>
-                        <span>LVL {level}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="px-2.5 py-1 rounded-full bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 border border-cyan-400/30 text-cyan-300 font-mono text-xs font-bold tracking-wider">
-                    DAY {item.dayNumber}
-                  </div>
-                </div>
-
-                {/* Middle: Photo Card */}
-                <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-slate-950 border border-slate-800/60 group-hover:border-cyan-500/30 transition">
+                {/* Media (9:16 Photo or Video) */}
+                {isVideo ? (
+                  <video
+                    src={item.fileUrl}
+                    loop
+                    muted
+                    playsInline
+                    autoPlay
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
                   <Image
                     src={item.fileUrl}
                     alt={item.caption}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                   />
-                  {/* Subtle Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                )}
 
-                  {/* Expand icon on hover */}
-                  <div className="absolute bottom-3 right-3 p-2 rounded-lg bg-slate-950/80 border border-slate-700 text-slate-300 group-hover:text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Maximize2 size={14} />
+                {/* Dark Gradient Overlay for Readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-slate-950/70 opacity-80 group-hover:opacity-60 transition-opacity" />
+
+                {/* Top Badge: Day Number + Media Type */}
+                <div className="relative z-10 p-2.5 flex items-center justify-between">
+                  <div className="px-2 py-0.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-cyan-400/40 text-cyan-300 font-mono text-[10px] font-extrabold tracking-wider shadow">
+                    DAY {String(item.dayNumber).padStart(2, "0")}
+                  </div>
+
+                  <div className="p-1 rounded-full bg-slate-900/80 text-cyan-300 border border-white/10 shadow text-[10px] font-mono">
+                    9:16
                   </div>
                 </div>
 
-                {/* Bottom: Caption & Timestamp */}
-                <div className="mt-3.5 space-y-2">
-                  <p className="text-sm text-slate-200 font-medium line-clamp-2 leading-relaxed">
-                    &ldquo;{item.caption}&rdquo;
+                {/* Center Hover Action */}
+                <div className="relative z-10 mx-auto w-10 h-10 rounded-full bg-cyan-500/20 backdrop-blur-md border border-cyan-400/50 flex items-center justify-center text-cyan-300 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:scale-110 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+                  <Maximize2 size={16} />
+                </div>
+
+                {/* Bottom Overlay: Author Details & Caption */}
+                <div className="relative z-10 p-3 space-y-1.5 font-mono">
+                  <div className="flex items-center gap-1.5">
+                    <div className="relative w-5 h-5 rounded-full overflow-hidden border border-cyan-400/40 shrink-0">
+                      <Image src={avatarUrl} alt={item.user.name} fill className="object-cover" />
+                    </div>
+                    <span className="text-[11px] font-bold text-white truncate max-w-[85px]">
+                      {item.user.name}
+                    </span>
+                    <span className="text-[9px] px-1 rounded bg-sky-500/20 text-sky-300 font-extrabold shrink-0">
+                      L{level}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-200 font-sans line-clamp-2 leading-snug">
+                    {item.caption}
                   </p>
 
-                  <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 pt-2 border-t border-slate-800/50">
-                    <div className="flex items-center gap-1 text-slate-400">
-                      <Flame size={12} className="text-amber-400" />
-                      <span>{currentClass}</span>
-                    </div>
-                    <span>
+                  <div className="text-[9px] text-slate-400 flex items-center justify-between pt-1 border-t border-white/10">
+                    <span className="truncate">{currentClass}</span>
+                    <span className="text-cyan-400 font-semibold uppercase">
                       {new Date(item.createdAt).toLocaleDateString("en-GB", {
                         day: "numeric",
                         month: "short",
@@ -332,61 +336,78 @@ export const LiveProofFeedSection: React.FC = () => {
           })}
         </div>
 
-        {/* Modal: Full Resolution Viewer */}
+        {/* Modal: Full 9:16 Story Lightbox */}
         {activeModalProof && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-200"
             onClick={() => setActiveModalProof(null)}
           >
             <div
-              className="relative w-full max-w-2xl rounded-2xl bg-slate-900 border border-cyan-500/40 p-6 shadow-2xl space-y-4"
+              className="relative w-full max-w-sm rounded-3xl bg-slate-950 border border-cyan-400/40 overflow-hidden shadow-[0_0_80px_rgba(6,182,212,0.35)] flex flex-col max-h-[92vh]"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => setActiveModalProof(null)}
-                className="absolute top-4 right-4 p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition"
-              >
-                <X size={18} />
-              </button>
+              <div className="p-3.5 px-4 flex items-center justify-between border-b border-white/10 bg-slate-900/80">
+                <div className="flex items-center gap-2.5">
+                  <div className="relative w-8 h-8 rounded-full overflow-hidden border border-cyan-400">
+                    <Image
+                      src={activeModalProof.user.profile?.avatar || "/assets/images/avatars/avatar_01.png"}
+                      alt={activeModalProof.user.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-white flex items-center gap-1">
+                      {activeModalProof.user.name}
+                      <ShieldCheck size={13} className="text-cyan-400" />
+                    </h3>
+                    <p className="text-[10px] font-mono text-cyan-300">
+                      @{activeModalProof.user.username} • DAY {activeModalProof.dayNumber} PROOF
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setActiveModalProof(null)}
+                  className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition"
+                >
+                  <X size={16} />
+                </button>
+              </div>
 
-              <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden border border-cyan-400">
-                  <Image
-                    src={activeModalProof.user.profile?.avatar || "/assets/images/avatars/avatar_01.png"}
-                    alt={activeModalProof.user.name}
-                    fill
-                    className="object-cover"
+              {/* 9:16 Media Viewport */}
+              <div className="relative w-full aspect-[9/16] max-h-[62vh] bg-black flex items-center justify-center overflow-hidden">
+                {activeModalProof.fileType === "video" ||
+                activeModalProof.fileUrl.endsWith(".mp4") ||
+                activeModalProof.fileUrl.startsWith("data:video") ? (
+                  <video
+                    src={activeModalProof.fileUrl}
+                    controls
+                    autoPlay
+                    loop
+                    playsInline
+                    className="w-full h-full object-contain"
                   />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    {activeModalProof.user.name}
-                    <ShieldCheck size={16} className="text-cyan-400" />
-                  </h3>
-                  <p className="text-xs font-mono text-cyan-300">
-                    @{activeModalProof.user.username} • {activeModalProof.user.profile?.currentClass}
-                  </p>
-                </div>
-                <div className="ml-auto mr-8 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-300 font-mono text-sm font-bold">
-                  DAY {activeModalProof.dayNumber}
-                </div>
+                ) : (
+                  <Image
+                    src={activeModalProof.fileUrl}
+                    alt={activeModalProof.caption}
+                    fill
+                    className="object-contain"
+                  />
+                )}
               </div>
 
-              <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-slate-800">
-                <Image
-                  src={activeModalProof.fileUrl}
-                  alt={activeModalProof.caption}
-                  fill
-                  className="object-contain"
-                />
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 space-y-1">
-                <div className="text-xs font-mono text-cyan-400 uppercase tracking-widest">
-                  Verified Daily Execution Log:
+              <div className="p-4 bg-slate-900/90 border-t border-white/10 space-y-1.5">
+                <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest flex items-center justify-between">
+                  <span>Verified 9:16 Daily Proof</span>
+                  <span>{new Date(activeModalProof.createdAt).toLocaleDateString("en-US", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}</span>
                 </div>
-                <p className="text-sm text-slate-200 leading-relaxed">
-                  {activeModalProof.caption}
+                <p className="text-xs text-slate-200 leading-relaxed font-sans">
+                  &ldquo;{activeModalProof.caption}&rdquo;
                 </p>
               </div>
             </div>

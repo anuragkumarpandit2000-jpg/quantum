@@ -1338,13 +1338,18 @@ export const QuantumMobileExperience: React.FC = () => {
               </button>
             </div>
 
-            <div className="relative rounded-xl overflow-hidden border border-sky-400/30 bg-white p-4 shadow-xl">
+            <div className="relative rounded-xl overflow-hidden border border-sky-400/30 bg-slate-900/90 p-2 shadow-xl flex items-center justify-center">
               <div className="relative w-full aspect-[1.414/1] max-h-[380px]">
                 <Image
                   src="/assets/images/certificate/certificate.png"
                   alt="Quantum 90-Day Completion Certificate"
                   fill
-                  className="object-contain"
+                  unoptimized
+                  className="object-contain rounded-lg"
+                  onError={(e) => {
+                    // Fallback to document folder if certificate folder fails
+                    (e.target as any).src = "/assets/images/document/certificate.png";
+                  }}
                 />
               </div>
             </div>

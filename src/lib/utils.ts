@@ -145,8 +145,7 @@ export const WINTER_ARC_MILESTONES: WinterArcMilestone[] = [
 ];
 
 export function calculateLevel(
-  xpOrStreak: number,
-  streakFallback?: number
+  streak: number
 ): {
   level: number;
   tier: string;
@@ -158,10 +157,34 @@ export function calculateLevel(
   quote: string;
   badgeColor: string;
 } {
-  // Use streak for precise Winter Arc level ladder if provided, otherwise support both
-  const streak = typeof streakFallback === "number" ? streakFallback : xpOrStreak;
-  const s = Math.max(0, streak);
+  const s = Math.max(0, typeof streak === "number" ? streak : 0);
 
+  // Before completing Day 1 (brand new user or reset), challenger is at Level 0
+  if (s < 1) {
+    return {
+      level: 0,
+      tier: "Inductee Tier 0",
+      nextLevelXP: 100,
+      progressPercent: 0,
+      minDays: 0,
+      nextDays: 1,
+      title: "Induction Initiating",
+      quote: "Complete Day 01 before 12:00 AM midnight reset to unlock Level 1!",
+      badgeColor: "#64748b",
+    };
+  }
+
+  // Exact Winter Arc Level Ladder:
+  // Day 1: Level 1
+  // Day 7: Level 2
+  // Day 14: Level 3
+  // Day 25: Level 4
+  // Day 30: Level 5
+  // Day 45: Level 6
+  // Day 52: Level 7
+  // Day 65: Level 8
+  // Day 75: Level 9
+  // Day 90: Level 10
   let m = WINTER_ARC_MILESTONES[0];
   if (s >= 90) m = WINTER_ARC_MILESTONES[9];
   else if (s >= 75) m = WINTER_ARC_MILESTONES[8];
@@ -194,4 +217,55 @@ export function calculateLevel(
     quote: m.quote,
     badgeColor: m.badgeColor,
   };
+}
+
+/**
+ * Calculates current active Winter Arc Day (1..90) based on 24-hour midnight resets.
+ * Resets precisely at 12:00:00 AM (midnight) local time.
+ * For brand new users on login, cleanly initializes to Day 1 (count = 1).
+ */
+export function getActiveWinterArcDay(startDate?: Date | string | null): number {
+  if (!startDate) return 1;
+  const start = new Date(startDate);
+  if (isNaN(start.getTime())) return 1;
+
+  const startMidnight = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+  const now = new Date();
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+  const diffDays = Math.floor((todayMidnight - startMidnight) / (1000 * 60 * 60 * 24));
+  return Math.min(90, Math.max(1, diffDays + 1));
+}
+
+/**
+ * Returns remaining 24-hour clock countdown until the 12:00 AM midnight reset.
+ */
+export function getTimeUntilMidnight(): {
+  hours: number;
+  minutes: number;
+  seconds: number;
+  totalSeconds: number;
+  formatted: string;
+} {
+  const now = new Date();
+  const tomorrowMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0,
+    0,
+    0,
+    0
+  );
+  const diffMs = tomorrowMidnight.getTime() - now.getTime();
+  const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const formatted = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+
+  return { hours, minutes, seconds, totalSeconds, formatted };
 }

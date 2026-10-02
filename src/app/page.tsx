@@ -23,7 +23,14 @@ import {
   Activity,
   Heart,
   Star,
+  Lock,
+  Volume2,
+  X,
+  MessageSquare,
+  Clock,
+  User as UserIcon,
 } from "lucide-react";
+import confetti from "canvas-confetti";
 import { Button, LiquidButton, MetalButton } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DancingLetters from "@/components/ui/dancing-letters";
@@ -45,15 +52,28 @@ export default function LandingPage() {
   // Cursor parallax state for hero background
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [copiedUPI, setCopiedUPI] = useState(false);
-  const [donationAmount, setDonationAmount] = useState("299");
-  const [donorName, setDonorName] = useState("");
+  const [donationAmount, setDonationAmount] = useState("100");
+  const [donorFeedback, setDonorFeedback] = useState("");
+  const [donationSubmitting, setDonationSubmitting] = useState(false);
   const [donationStatus, setDonationStatus] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [thankYouModalOpen, setThankYouModalOpen] = useState(false);
+  const [lastPledge, setLastPledge] = useState<{
+    name: string;
+    rank: string;
+    amount: number;
+    feedback: string;
+    xpEarned: number;
+  } | null>(null);
+  const [recentPatrons, setRecentPatrons] = useState<any[]>([]);
+  const [patronsTotal, setPatronsTotal] = useState<number>(0);
   const [liveTelemetry, setLiveTelemetry] = useState<{ liveNow: number; totalChallengers: number }>({
     liveNow: 28,
     totalChallengers: 1429,
   });
 
-  // Fetch real-time live telemetry
+  // Fetch real-time live telemetry, user authentication, and recent patrons
   useEffect(() => {
     fetch("/api/telemetry/live")
       .then((res) => res.json())
@@ -63,6 +83,28 @@ export default function LandingPage() {
             liveNow: data.liveNow,
             totalChallengers: data.totalChallengers,
           });
+        }
+      })
+      .catch(() => {});
+
+    // Check user auth
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.user) {
+          setCurrentUser(data.user);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setAuthLoading(false));
+
+    // Fetch existing patron contributions
+    fetch("/api/donations")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.recentDonations) {
+          setRecentPatrons(data.recentDonations);
+          setPatronsTotal(data.totalContributed || 0);
         }
       })
       .catch(() => {});
@@ -87,24 +129,101 @@ export default function LandingPage() {
     setTimeout(() => setCopiedUPI(false), 2000);
   };
 
+  const playThankYouTTS = async () => {
+    const speechText = "Thank you brother for helping our community!";
+    try {
+      const res = await fetch("/api/ai/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: speechText }),
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        await audio.play();
+        return;
+      }
+    } catch (e) {
+      console.warn("TTS API fallback to Web Speech Synthesis:", e);
+    }
+
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(speechText);
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   const handleDonateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser) {
+      setDonationStatus("Authentication required: Please log in or sign up first to confirm your pledge.");
+      return;
+    }
+    const amt = parseFloat(donationAmount);
+    if (isNaN(amt) || amt <= 0) {
+      setDonationStatus("Please choose or enter a valid contribution amount.");
+      return;
+    }
+
+    setDonationSubmitting(true);
+    setDonationStatus(null);
     try {
       const res = await fetch("/api/donations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: parseFloat(donationAmount),
-          donorName: donorName || "Anonymous Challenger",
+          amount: amt,
+          feedback: donorFeedback,
           upiId: "anuragkumar.pandit2000@okicici",
         }),
       });
+
+      const data = await res.json();
       if (res.ok) {
-        setDonationStatus("Thank you for reinforcing the Quantum protocol!");
-        setDonorName("");
+        // Trigger celebratory confetti burst
+        confetti({
+          particleCount: 160,
+          spread: 100,
+          origin: { y: 0.6 },
+          colors: ["#38bdf8", "#fbbf24", "#10b981", "#818cf8", "#f43f5e"],
+        });
+
+        // Trigger Gemini TTS brother voice
+        playThankYouTTS();
+
+        const userRank = currentUser.profile?.currentClass || `Level ${currentUser.profile?.level || 1}`;
+        setLastPledge({
+          name: currentUser.name || currentUser.username || "Challenger",
+          rank: userRank,
+          amount: amt,
+          feedback: donorFeedback.trim() || "Pledged support for Quantum Community",
+          xpEarned: Math.round(amt * 5),
+        });
+
+        setThankYouModalOpen(true);
+        setDonorFeedback("");
+
+        // Refresh patron wall
+        fetch("/api/donations")
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.recentDonations) {
+              setRecentPatrons(d.recentDonations);
+              setPatronsTotal(d.totalContributed || 0);
+            }
+          })
+          .catch(() => {});
+      } else {
+        setDonationStatus(data.error || "Failed to process pledge. Please try again.");
       }
     } catch {
-      setDonationStatus("Thank you for your generous pledge!");
+      setDonationStatus("Network error. Please try again.");
+    } finally {
+      setDonationSubmitting(false);
     }
   };
 
@@ -702,7 +821,7 @@ export default function LandingPage() {
         {/* Soft radial blue lighting */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.06),transparent_65%)] pointer-events-none" />
 
-        <div className="relative max-w-4xl mx-auto space-y-10 text-center">
+        <div className="relative max-w-5xl mx-auto space-y-12 text-center">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300 font-mono text-[11px] tracking-widest uppercase">
               <Heart size={12} className="text-sky-400" />
@@ -759,63 +878,227 @@ export default function LandingPage() {
               </div>
             </QuantumTiltCard>
 
-            {/* Contribution Form */}
+            {/* Contribution Form & Authentication Gate */}
             <QuantumTiltCard className="p-6 sm:p-8 space-y-4 font-mono flex flex-col justify-center">
-              <form onSubmit={handleDonateSubmit} className="space-y-4 w-full">
-                <div className="space-y-1">
-                  <label className="text-xs text-slate-400">YOUR CALLSIGN / NAME</label>
-                  <Input
-                    placeholder="Anonymous Challenger"
-                    value={donorName}
-                    onChange={(e) => setDonorName(e.target.value)}
-                    className="bg-slate-900/80 border-slate-800 text-slate-100 text-xs focus:border-sky-400"
-                  />
-                </div>
+              {!currentUser && !authLoading ? (
+                /* Unauthenticated Challenger Notice */
+                <div className="p-6 rounded-2xl bg-slate-900/90 border border-amber-500/40 text-amber-200 text-xs space-y-4 font-mono shadow-xl">
+                  <div className="flex items-center gap-2.5 font-bold text-amber-400 tracking-wider text-sm">
+                    <Lock size={18} className="text-amber-400 shrink-0" />
+                    <span>AUTHENTICATION REQUIRED TO PLEDGE</span>
+                  </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs text-slate-400">SELECT CONTRIBUTION (INR)</label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {["20", "100", "299", "999"].map((amt) => (
-                      <button
-                        key={amt}
-                        type="button"
-                        onClick={() => setDonationAmount(amt)}
-                        className={cn(
-                          "py-2 rounded-lg text-xs font-bold border transition font-mono",
-                          donationAmount === amt
-                            ? "bg-sky-500/20 border-sky-400 text-sky-300 shadow-md shadow-sky-500/20"
-                            : "bg-slate-900/90 border-slate-800 text-slate-400 hover:bg-slate-850 hover:text-slate-200"
-                        )}
-                      >
-                        ₹{amt}
-                      </button>
-                    ))}
+                  <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                    To record your sovereign callsign, unlock your verified rank badge, earn +5 XP per ₹1, and post your feedback note to the Community Patron Wall, you must be logged into Quantum.
+                  </p>
+
+                  <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5 text-[11px] text-slate-400 font-mono">
+                    <div className="text-sky-400 font-bold">BENEFITS OF LOGGED-IN SUPPORT:</div>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <span className="text-emerald-400">✓</span> Your Username & Verified Rank permanently displayed
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <span className="text-emerald-400">✓</span> Instant Supporter XP bonus credited to profile
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <span className="text-emerald-400">✓</span> Gemini TTS Brother celebration audio sequence
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <Link href="/login">
+                      <Button variant="quantum" className="w-full text-xs font-mono py-2.5">
+                        LOG IN TO PLEDGE
+                      </Button>
+                    </Link>
+                    <Link href="/signup">
+                      <Button variant="outline" className="w-full text-xs font-mono py-2.5 border-slate-700 bg-slate-900 hover:bg-slate-800 text-white">
+                        SIGN UP
+                      </Button>
+                    </Link>
                   </div>
                 </div>
+              ) : (
+                /* Authenticated Challenger Form */
+                <form onSubmit={handleDonateSubmit} className="space-y-4 w-full">
+                  {currentUser && (
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-sky-950/40 border border-sky-400/30">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-sky-500/20 border border-sky-400 flex items-center justify-center text-sky-300 font-bold text-xs uppercase">
+                          {currentUser.name?.[0] || currentUser.username?.[0] || "C"}
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                            <span>{currentUser.name || currentUser.username}</span>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono">
+                              AUTHENTICATED
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-sky-400 font-mono">
+                            RANK: {currentUser.profile?.currentClass || `Level ${currentUser.profile?.level || 1}`}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right text-[10px] font-mono text-slate-400">
+                        <div className="text-emerald-300 font-bold">
+                          +{Math.round((parseFloat(donationAmount) || 0) * 5)} XP
+                        </div>
+                        <div className="text-[9px] text-slate-400">SUPPORTER BONUS</div>
+                      </div>
+                    </div>
+                  )}
 
-                <div className="space-y-1">
-                  <label className="text-xs text-slate-400">CUSTOM AMOUNT (INR)</label>
-                  <Input
-                    type="number"
-                    value={donationAmount}
-                    onChange={(e) => setDonationAmount(e.target.value)}
-                    min="1"
-                    placeholder="Enter Custom Amount"
-                    className="bg-slate-900/80 border-slate-800 text-slate-100 text-xs focus:border-sky-400"
-                  />
-                </div>
-
-                <Button type="submit" variant="quantum" className="w-full text-xs py-3">
-                  CONFIRM SUPPORT PLEDGE
-                </Button>
-
-                {donationStatus && (
-                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs rounded-lg text-center font-sans">
-                    {donationStatus}
+                  {/* Tier Buttons */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-400 flex items-center justify-between">
+                      <span>SELECT CONTRIBUTION (INR)</span>
+                      <span className="text-[10px] text-sky-400 font-mono">₹1 = +5 XP</span>
+                    </label>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                      {["10", "50", "100", "500", "1000", "10000"].map((amt) => (
+                        <button
+                          key={amt}
+                          type="button"
+                          onClick={() => setDonationAmount(amt)}
+                          className={cn(
+                            "py-2 rounded-lg text-xs font-bold border transition font-mono",
+                            donationAmount === amt
+                              ? "bg-sky-500/20 border-sky-400 text-sky-300 shadow-md shadow-sky-500/20 scale-[1.02]"
+                              : "bg-slate-900/90 border-slate-800 text-slate-400 hover:bg-slate-850 hover:text-slate-200"
+                          )}
+                        >
+                          ₹{parseInt(amt).toLocaleString()}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                )}
-              </form>
+
+                  {/* Custom Amount */}
+                  <div className="space-y-1">
+                    <label className="text-xs text-slate-400">WHATEVER YOU WANT TO GIVE US (INR)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                        ₹
+                      </span>
+                      <Input
+                        type="number"
+                        value={donationAmount}
+                        onChange={(e) => setDonationAmount(e.target.value)}
+                        min="1"
+                        placeholder="Whatever you want to give us"
+                        className="pl-7 bg-slate-900/80 border-slate-800 text-slate-100 text-xs focus:border-sky-400 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Feedback / Encouragement Note */}
+                  <div className="space-y-1">
+                    <label className="text-xs text-slate-400 flex items-center justify-between">
+                      <span>FEEDBACK / COMMUNITY MESSAGE</span>
+                      <span className="text-[10px] text-slate-500">Optional</span>
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={donorFeedback}
+                      onChange={(e) => setDonorFeedback(e.target.value)}
+                      placeholder="Write your feedback, message, or encouragement for the Quantum community..."
+                      className="w-full rounded-md border border-slate-800 bg-slate-900/80 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-400 font-mono resize-none"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="quantum"
+                    disabled={donationSubmitting}
+                    className="w-full text-xs py-3 font-mono shadow-lg shadow-sky-500/20"
+                  >
+                    {donationSubmitting ? "RECORDING PLEDGE..." : "CONFIRM SUPPORT PLEDGE"}
+                  </Button>
+
+                  {donationStatus && (
+                    <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-lg text-center font-sans">
+                      {donationStatus}
+                    </div>
+                  )}
+                </form>
+              )}
             </QuantumTiltCard>
+          </div>
+
+          {/* ============================================================
+              COMMUNITY PATRON WALL & PLEDGE HISTORY
+              ============================================================ */}
+          <div className="pt-8 space-y-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800/80 pb-4 text-left">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-mono text-sky-400 font-bold uppercase tracking-wider">
+                  <Award size={14} className="text-sky-400" />
+                  COMMUNITY PATRON WALL & PLEDGE HISTORY
+                </div>
+                <div className="text-slate-400 text-xs font-sans mt-0.5">
+                  Honoring sovereign challengers who reinforce the Winter Arc open-source infrastructure.
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 font-mono text-xs">
+                <span className="px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300">
+                  TOTAL: ₹{patronsTotal.toLocaleString()}
+                </span>
+                <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-300">
+                  {recentPatrons.length} PATRONS
+                </span>
+              </div>
+            </div>
+
+            {recentPatrons.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-center font-mono space-y-2">
+                <div className="text-slate-500 text-xs">NO PLEDGES RECORDED YET TODAY</div>
+                <div className="text-slate-400 text-xs font-sans">
+                  Be the first challenger to claim your permanent spot on the Community Patron Wall!
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 text-left">
+                {recentPatrons.map((patron) => (
+                  <QuantumTiltCard key={patron.id} className="p-4 space-y-3 font-mono border-slate-800 bg-slate-950/70">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 truncate">
+                        <div className="w-7 h-7 rounded-full bg-sky-500/20 border border-sky-400/60 flex items-center justify-center text-sky-300 font-bold text-xs shrink-0">
+                          {patron.donorName?.[0] || "C"}
+                        </div>
+                        <div className="truncate">
+                          <div className="text-xs font-bold text-white truncate">{patron.donorName}</div>
+                          <div className="text-[10px] text-sky-400 truncate">
+                            {patron.user?.profile?.currentClass || `Level ${patron.user?.profile?.level || 1}`}
+                          </div>
+                        </div>
+                      </div>
+
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold text-xs shrink-0">
+                        ₹{patron.amount.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800/80 text-[11px] text-slate-300 font-sans italic line-clamp-2">
+                      &ldquo;{patron.transactionRef || "Supported the Quantum Protocol"}&rdquo;
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+                      <span className="flex items-center gap-1">
+                        <CheckCircle2 size={11} className="text-emerald-400" />
+                        VERIFIED SUPPORTER
+                      </span>
+                      <span>
+                        {new Date(patron.createdAt).toLocaleDateString("en-IN", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
+                    </div>
+                  </QuantumTiltCard>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -910,8 +1193,15 @@ export default function LandingPage() {
 
         <div className="relative z-10 max-w-3xl mx-auto">
           <QuantumTiltCard maxTilt={4} liftDistance={8} className="p-8 sm:p-12 space-y-8">
-            <div className="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-400/40 mx-auto flex items-center justify-center text-sky-400 shadow-[0_0_35px_rgba(56,189,248,0.4)]">
-              <Shield size={32} />
+            <div className="w-20 h-20 rounded-2xl bg-sky-500/10 border border-sky-400/40 mx-auto flex items-center justify-center p-3 text-sky-400 shadow-[0_0_35px_rgba(56,189,248,0.4)] overflow-hidden">
+              <Image
+                src="/logo.png"
+                alt="Quantum App Logo"
+                width={56}
+                height={56}
+                className="object-contain"
+                priority
+              />
             </div>
 
             <div className="space-y-3">
@@ -940,6 +1230,108 @@ export default function LandingPage() {
           </QuantumTiltCard>
         </div>
       </section>
+
+      {/* ============================================================
+          13 — HUGE THANK YOU BROTHER CELEBRATION MODAL
+          ============================================================ */}
+      {thankYouModalOpen && lastPledge && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+          <div className="relative w-full max-w-xl rounded-3xl bg-slate-950 border-2 border-sky-400/70 p-6 sm:p-8 shadow-[0_0_80px_rgba(56,189,248,0.4)] space-y-6 text-center animate-in fade-in zoom-in-95 duration-200">
+            {/* Close button */}
+            <button
+              onClick={() => setThankYouModalOpen(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-900 border border-slate-800 hover:border-sky-400 text-slate-400 hover:text-white flex items-center justify-center transition"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Glowing Trophy / Badge */}
+            <div className="relative mx-auto w-24 h-24 rounded-3xl bg-gradient-to-tr from-sky-500/20 via-cyan-500/30 to-amber-500/20 border-2 border-sky-400/60 flex items-center justify-center shadow-[0_0_45px_rgba(56,189,248,0.5)]">
+              <Trophy size={48} className="text-amber-400 animate-pulse" />
+              <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-slate-950 font-bold text-xs shadow-md">
+                ✓
+              </div>
+            </div>
+
+            {/* Huge Headline */}
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-300 font-mono text-xs tracking-widest uppercase">
+                <Sparkles size={12} className="text-amber-400" />
+                SOVEREIGN PLEDGE CONFIRMED
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-sans">
+                THANK YOU BROTHER!
+              </h2>
+              <p className="text-sky-300 text-sm sm:text-base font-mono font-bold">
+                &ldquo;Thank you brother for helping our community!&rdquo;
+              </p>
+            </div>
+
+            {/* Audio Voice Replay Pill */}
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={playThankYouTTS}
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/50 text-sky-200 text-xs font-mono transition shadow-md"
+              >
+                <Volume2 size={14} className="text-sky-400 animate-pulse" />
+                <span>REPLAY BROTHER VOICE (GEMINI TTS)</span>
+              </button>
+            </div>
+
+            {/* Contribution Details Card */}
+            <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-left space-y-3 font-mono text-xs">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                <span className="text-slate-400">CHALLENGER:</span>
+                <span className="text-white font-bold">{lastPledge.name}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                <span className="text-slate-400">VERIFIED RANK:</span>
+                <span className="text-sky-300 font-bold">{lastPledge.rank}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                <span className="text-slate-400">CONTRIBUTION AMOUNT:</span>
+                <span className="text-emerald-400 font-extrabold text-sm">
+                  ₹{lastPledge.amount.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                <span className="text-slate-400">SUPPORTER XP BONUS:</span>
+                <span className="text-amber-400 font-bold">+{lastPledge.xpEarned} XP AWARDED</span>
+              </div>
+              {lastPledge.feedback && (
+                <div className="pt-1">
+                  <span className="text-slate-400 block text-[10px] uppercase mb-1">
+                    RECORDED MESSAGE:
+                  </span>
+                  <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-slate-200 italic font-sans text-xs">
+                    &ldquo;{lastPledge.feedback}&rdquo;
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button
+                variant="quantum"
+                onClick={() => setThankYouModalOpen(false)}
+                className="w-full font-mono text-xs py-3"
+              >
+                CONTINUE TRANSFORMATION
+              </Button>
+              <Link href="/dashboard" className="w-full">
+                <Button
+                  variant="outline"
+                  className="w-full font-mono text-xs py-3 border-slate-700 bg-slate-900 text-slate-200 hover:text-white"
+                >
+                  ENTER COMMAND CENTER
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <LandingFooter />
     </div>
