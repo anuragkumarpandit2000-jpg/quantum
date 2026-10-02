@@ -1,0 +1,182 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ habitId: string }> | { habitId: string } }
+) {
+  try {
+    const user = await getCurrentUser(req);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { habitId } = await Promise.resolve(params);
+    const body = await req.json();
+    const { dayNumber, status } = body; // status can be "COMPLETED", "MISSED", or "PENDING"
+
+    if (!dayNumber || dayNumber < 1 || dayNumber > 90) {
+      return NextResponse.json({ error: "Invalid dayNumber" }, { status: 400 });
+    }
+
+    // Verify habit belongs to user
+    const habit = await prisma.habit.findFirst({
+      where: { id: habitId, userId: user.id },
+    });
+
+    if (!habit) {
+      return NextResponse.json({ error: "Habit not found" }, { status: 404 });
+    }
+
+    // Find existing completion
+    const existing = await prisma.habitCompletion.findUnique({
+      where: {
+        habitId_dayNumber: {
+          habitId,
+          dayNumber,
+        },
+      },
+    });
+
+    const prevStatus = existing?.status || "PENDING";
+    const nextStatus = status || (prevStatus === "PENDING" ? "COMPLETED" : prevStatus === "COMPLETED" ? "MISSED" : "PENDING");
+
+    let xpDelta = 0;
+    if (prevStatus !== "COMPLETED" && nextStatus === "COMPLETED") {
+      xpDelta = 50; // Earn 50 XP
+    } else if (prevStatus === "COMPLETED" && nextStatus !== "COMPLETED") {
+      xpDelta = -50; // Reverse 50 XP
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Upsert completion
+      const updatedCompletion = await tx.habitCompletion.upsert({
+        where: {
+          habitId_dayNumber: {
+            habitId,
+            dayNumber,
+          },
+        },
+        create: {
+          habitId,
+          dayNumber,
+          status: nextStatus,
+          completedAt: nextStatus === "COMPLETED" ? new Date() : null,
+        },
+        update: {
+          status: nextStatus,
+          completedAt: nextStatus === "COMPLETED" ? new Date() : null,
+        },
+      });
+
+      // 2. Adjust User profile XP
+      let newTotalXP = user.profile?.totalXP || 0;
+      if (xpDelta !== 0) {
+        newTotalXP = Math.max(0, newTotalXP + xpDelta);
+        const newLevel = Math.floor(newTotalXP / 1000) + 1;
+
+        await tx.profile.update({
+          where: { userId: user.id },
+          data: {
+            totalXP: newTotalXP,
+            level: newLevel,
+          },
+        });
+
+        // Record XP transaction
+        if (xpDelta > 0) {
+          await tx.xPTransaction.create({
+            data: {
+              userId: user.id,
+              amount: xpDelta,
+              source: "HABIT_COMPLETION",
+              description: `Completed habit "${habit.title}" on Day ${dayNumber}`,
+              referenceId: updatedCompletion.id,
+            },
+          });
+        }
+      }
+
+      // 3. Recalculate Streak and Consistency taking into account COMPLETED and MISSED days
+      const allCompletions = await tx.habitCompletion.findMany({
+        where: {
+          habit: { userId: user.id },
+        },
+        select: { dayNumber: true, status: true },
+      });
+
+      const dayMap = new Map<number, { completedCount: number; missedCount: number }>();
+      allCompletions.forEach((c) => {
+        if (!dayMap.has(c.dayNumber)) {
+          dayMap.set(c.dayNumber, { completedCount: 0, missedCount: 0 });
+        }
+        const entry = dayMap.get(c.dayNumber)!;
+        if (c.status === "COMPLETED") entry.completedCount++;
+        if (c.status === "MISSED") entry.missedCount++;
+      });
+
+      const loggedDays = Array.from(dayMap.keys()).filter((d) => {
+        const s = dayMap.get(d)!;
+        return s.completedCount > 0 || s.missedCount > 0;
+      });
+
+      const maxDay = loggedDays.length > 0 ? Math.max(...loggedDays) : 1;
+      let currentStreak = 0;
+      let longestStreak = user.streak?.longestStreak || 0;
+      let runningStreak = 0;
+      let totalCompletedDays = 0;
+
+      for (let d = 1; d <= maxDay; d++) {
+        const info = dayMap.get(d);
+        if (info && info.completedCount > 0 && info.missedCount === 0) {
+          runningStreak++;
+          totalCompletedDays++;
+          if (runningStreak > longestStreak) {
+            longestStreak = runningStreak;
+          }
+        } else if (info && (info.missedCount > 0 || info.completedCount === 0)) {
+          runningStreak = 0;
+        }
+      }
+      currentStreak = runningStreak;
+
+      const consistencyRate =
+        loggedDays.length > 0
+          ? Math.min(100, Math.round((totalCompletedDays / loggedDays.length) * 100))
+          : 0;
+
+      await tx.streak.upsert({
+        where: { userId: user.id },
+        create: {
+          userId: user.id,
+          currentStreak,
+          longestStreak,
+          lastCompletedDay: Math.max(user.streak?.lastCompletedDay || 0, nextStatus === "COMPLETED" ? dayNumber : 0),
+          consistencyRate,
+          lastActiveDate: new Date(),
+        },
+        update: {
+          currentStreak,
+          longestStreak,
+          lastCompletedDay: Math.max(user.streak?.lastCompletedDay || 0, nextStatus === "COMPLETED" ? dayNumber : 0),
+          consistencyRate,
+          lastActiveDate: new Date(),
+        },
+      });
+
+      return {
+        completion: updatedCompletion,
+        totalXP: newTotalXP,
+        currentStreak,
+        longestStreak,
+        consistencyRate,
+      };
+    });
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("PATCH /api/habits/[habitId]/completion error:", error);
+    return NextResponse.json({ error: "Failed to update completion" }, { status: 500 });
+  }
+}

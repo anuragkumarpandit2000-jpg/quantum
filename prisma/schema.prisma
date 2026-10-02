@@ -1,0 +1,299 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id               String            @id @default(uuid())
+  email            String            @unique
+  username         String            @unique
+  passwordHash     String
+  name             String
+  role             String            @default("USER")
+  emailVerified    Boolean           @default(false)
+  emailVerifiedAt  DateTime?
+  lastVerificationSentAt DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  verificationTokens EmailVerificationToken[]
+  profile          Profile?
+  settings         UserSettings?
+  streak           Streak?
+  habits           Habit[]
+  xpTransactions   XPTransaction[]
+  skills           Skill[]
+  galleryItems     GalleryItem[]
+  achievements     Achievement[]
+  feedbacks        Feedback[]
+  aiConversations  AIConversation[]
+  certificates     Certificate[]
+  donations        Donation[]
+  notifications    Notification[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model EmailVerificationToken {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash   String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model Profile {
+  id               String            @id @default(uuid())
+  userId           String            @unique
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatar           String            @default("/assets/images/avatar_1.png")
+  bio              String?
+  objective        String            @default("Master discipline, achieve peak physical and mental clarity through the 90-Day Winter Arc.")
+  currentClass     String            @default("Initiate Tier I")
+  level            Int               @default(1)
+  totalXP          Int               @default(0)
+  targetXP         Int               @default(10000)
+  dailyAvailableHours Float          @default(2.5)
+  age              Int?
+  startDate        DateTime          @default(now())
+  endDate          DateTime          @default(now())
+  onboardingDone   Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model UserSettings {
+  id                    String       @id @default(uuid())
+  userId                String       @unique
+  user                  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  soundEnabled          Boolean      @default(true)
+  soundVolume           Float        @default(0.4)
+  theme                 String       @default("dark")
+  leaderboardVisible    Boolean      @default(true)
+  activityVisible       Boolean      @default(true)
+  notificationsEnabled  Boolean      @default(true)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+}
+
+model Streak {
+  id               String            @id @default(uuid())
+  userId           String            @unique
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentStreak    Int               @default(0)
+  longestStreak    Int               @default(0)
+  lastCompletedDay Int               @default(0)
+  lastActiveDate   DateTime?
+  consistencyRate  Float             @default(0.0)
+  updatedAt        DateTime          @updatedAt
+}
+
+model Habit {
+  id               String            @id @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  category         String            @default("Core Discipline")
+  color            String            @default("#38bdf8")
+  icon             String            @default("zap")
+  archived         Boolean           @default(false)
+  order            Int               @default(0)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  completions      HabitCompletion[]
+
+  @@index([userId])
+}
+
+model HabitCompletion {
+  id               String            @id @default(uuid())
+  habitId          String
+  habit            Habit             @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  dayNumber        Int               // 1 to 90
+  status           String            // "PENDING", "COMPLETED", "MISSED"
+  completedAt      DateTime?
+  notes            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@unique([habitId, dayNumber])
+  @@index([habitId])
+  @@index([dayNumber])
+}
+
+model XPTransaction {
+  id               String            @id @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount           Int
+  source           String            // "HABIT_COMPLETION", "STREAK_MILESTONE", "SKILL_TASK", "CHALLENGE_APPROVED"
+  description      String
+  referenceId      String?
+  createdAt        DateTime          @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Skill {
+  id               String            @id @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  category         String            @default("Technical")
+  level            String            @default("Level 1: Fundamentals")
+  progress         Int               @default(0)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  tasks            SkillTask[]
+
+  @@index([userId])
+}
+
+model SkillTask {
+  id               String            @id @default(uuid())
+  skillId          String
+  skill            Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  title            String
+  xpReward         Int               @default(100)
+  order            Int               @default(0)
+  createdAt        DateTime          @default(now())
+
+  completions      SkillTaskCompletion[]
+
+  @@index([skillId])
+}
+
+model SkillTaskCompletion {
+  id               String            @id @default(uuid())
+  taskId           String
+  task             SkillTask         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  completed        Boolean           @default(false)
+  completedAt      DateTime?
+  updatedAt        DateTime          @updatedAt
+
+  @@unique([taskId])
+}
+
+model GalleryItem {
+  id               String            @id @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dayNumber        Int
+  caption          String
+  fileUrl          String
+  fileType         String            @default("image") // "image", "video", "document"
+  isPublic         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+
+  @@index([userId])
+  @@index([dayNumber])
+}
+
+model Achievement {
+  id               String            @id @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code             String
+  title            String
+  description      String
+  icon             String            @default("award")
+  unlockedAt       DateTime          @default(now())
+
+  @@unique([userId, code])
+  @@index([userId])
+}
+
+model Feedback {
+  id               String            @id @default(uuid())
+  userId           String?
+  user             User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  rating           Int               @default(5)
+  quote            String
+  authorName       String
+  authorTitle      String            @default("Arc Challenger")
+  avatarUrl        String?
+  isSample         Boolean           @default(false)
+  isApproved       Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+}
+
+model AIConversation {
+  id               String            @id @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String            @default("Quantum Core Session")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  messages         AIMessage[]
+
+  @@index([userId])
+}
+
+model AIMessage {
+  id               String            @id @default(uuid())
+  conversationId   String
+  conversation     AIConversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role             String            // "user" | "assistant" | "system"
+  content          String
+  thinkActive      Boolean           @default(false)
+  deepSearchActive Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+
+  @@index([conversationId])
+}
+
+model Certificate {
+  id               String            @id @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  certificateNumber String           @unique
+  userName         String
+  startDate        DateTime
+  endDate          DateTime
+  pledge           String            @default("I hereby commit to 90 consecutive days of unwavering focus, intense execution, and relentless self-discipline under the Quantum Winter Arc system.")
+  signatureUrl     String?
+  contractData     String?
+  academicStatus   String?
+  issuedAt         DateTime          @default(now())
+
+  @@index([userId])
+}
+
+model Donation {
+  id               String            @id @default(uuid())
+  userId           String?
+  user             User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  amount           Float
+  currency         String            @default("INR")
+  upiId            String?           @default("quantum@upi")
+  transactionRef   String?
+  status           String            @default("COMPLETED")
+  donorName        String            @default("Anonymous Challenger")
+  createdAt        DateTime          @default(now())
+}
+
+model Notification {
+  id               String            @id @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  message          String
+  type             String            @default("INFO") // "INFO", "STREAK", "XP", "ACHIEVEMENT"
+  read             Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+
+  @@index([userId])
+}
