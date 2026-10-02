@@ -84,7 +84,7 @@ export const LandingFooter: React.FC = () => {
               </Link>
             </li>
             <li>
-              <Link href="#donate" className="hover:text-sky-300 transition">
+              <Link href="/#about-support" className="hover:text-sky-300 transition">
                 Support Quantum
               </Link>
             </li>

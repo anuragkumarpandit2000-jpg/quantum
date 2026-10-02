@@ -45,6 +45,7 @@ import {
   ExternalLink,
   Eye,
   RefreshCw,
+  Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,7 @@ import {
 import MobileRotatingShowcase from "@/components/ui/mobile-rotating-showcase";
 import QuantumMobileExperience from "@/components/landing/quantum-mobile-experience";
 import AboutSection from "@/components/landing/about-section";
+import QuantumSupportModal from "@/components/donations/quantum-support-modal";
 import { cn, formatXP, calculateLevel, getActiveWinterArcDay, getTimeUntilMidnight } from "@/lib/utils";
 
 type NavTab =
@@ -281,6 +283,7 @@ export default function DashboardPage() {
   const [isTriggeringCompletion, setIsTriggeringCompletion] = useState(false);
   const [isSurpriseTrackerOpen, setIsSurpriseTrackerOpen] = useState(false);
   const [forceUnsealedTracker, setForceUnsealedTracker] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const profileFileRef = useRef<HTMLInputElement | null>(null);
 
   // 24-Hour Protocol Clock & Midnight Reset State
@@ -1033,8 +1036,22 @@ export default function DashboardPage() {
           </nav>
         </div>
 
-        {/* Bottom Nav Items: Settings & Log Out */}
+        {/* Bottom Nav Items: Support / Donate, Super Admin, Settings & Log Out */}
         <div className="pt-4 border-t border-slate-900 space-y-1 font-mono text-xs">
+          <button
+            onClick={() => {
+              setIsSupportModalOpen(true);
+              setMobileMenuOpen(false);
+            }}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500/15 via-pink-500/10 to-amber-500/15 border border-rose-500/40 text-rose-300 font-mono text-xs font-bold hover:scale-[1.02] hover:border-rose-400 transition shadow-[0_0_15px_rgba(244,63,94,0.2)] mb-1.5 group"
+          >
+            <div className="flex items-center gap-2">
+              <Heart size={16} className="text-rose-400 fill-rose-500/30 group-hover:scale-110 transition-transform" />
+              <span>DONATE / SUPPORT</span>
+            </div>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-200 font-mono">SUPPORT</span>
+          </button>
+
           {(user?.isAdmin || user?.email?.toLowerCase() === "anuragkumar.pandit2000@gmail.com" || user?.role === "ADMIN") && (
             <Link
               href="/admin"
@@ -3198,6 +3215,12 @@ export default function DashboardPage() {
       <LevelUpModal
         data={levelUpData}
         onClose={() => setLevelUpData(null)}
+      />
+
+      {/* Voluntary Support / Donation Modal */}
+      <QuantumSupportModal
+        isOpen={isSupportModalOpen}
+        onClose={() => setIsSupportModalOpen(false)}
       />
     </div>
   );

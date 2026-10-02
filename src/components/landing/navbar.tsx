@@ -75,7 +75,7 @@ export const LandingNavbar: React.FC = () => {
           <Link href="/#mobile" className="hover:text-sky-300 transition">
             06 • MOBILE
           </Link>
-          <Link href="/#donate" className="hover:text-sky-300 transition">
+          <Link href="/#about-support" className="hover:text-sky-300 transition">
             07 • SUPPORT
           </Link>
           <Link href="/#faq" className="hover:text-sky-300 transition">
@@ -161,11 +161,11 @@ export const LandingNavbar: React.FC = () => {
             06 • QUANTUM MOBILE
           </Link>
           <Link
-            href="#donate"
+            href="#about-support"
             onClick={() => setMobileMenuOpen(false)}
             className="text-slate-300 hover:text-sky-300 py-1"
           >
-            06 • SUPPORT
+            07 • SUPPORT
           </Link>
           <Link
             href="#faq"

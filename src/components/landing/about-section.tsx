@@ -23,10 +23,12 @@ import {
   Check,
   ChevronRight,
   ExternalLink,
+  Heart,
 } from "lucide-react";
 import QuantumTiltCard from "@/components/ui/quantum-tilt-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import QuantumSupportCard from "@/components/donations/quantum-support-card";
 
 // 6-step Pipeline
 const PIPELINE_STEPS = [
@@ -576,6 +578,26 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
             THE JOURNEY DOESN'T.
           </div>
         </div>
+      </section>
+
+      {/* ================================================================= */}
+      {/* 8. SUPPORT & REINFORCE THE QUANTUM PROTOCOL                       */}
+      {/* ================================================================= */}
+      <section id="about-support" className="relative max-w-5xl mx-auto pt-14 border-t border-slate-900/80">
+        <div className="text-center space-y-3 mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300 font-mono text-[11px] tracking-widest uppercase">
+            <Heart size={12} className="text-sky-400" />
+            REINFORCE THE PROTOCOL
+          </div>
+          <h3 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white font-sans">
+            SUPPORT QUANTUM
+          </h3>
+          <p className="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed font-sans">
+            Quantum is 100% free. If you find it useful, you can support the project. Contributions directly reinforce ongoing development, high-frequency infrastructure, and autonomous AI coaching systems.
+          </p>
+        </div>
+
+        <QuantumSupportCard showPatronWall={true} />
       </section>
     </div>
   );
