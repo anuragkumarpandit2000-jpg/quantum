@@ -58,6 +58,7 @@ import QuantumCompletionCertificate, {
   QuantumCertificateData,
 } from "@/components/certificate/quantum-completion-certificate";
 import ArcCompletionCelebration from "@/components/certificate/arc-completion-celebration";
+import { LevelUpModal, LevelUpData } from "@/components/ui/level-up-modal";
 import ThreeDWallCalendar from "@/components/ui/three-dwall-calendar";
 import DraggableWidgetGrid, { WidgetItem } from "@/components/ui/draggable-widget-grid";
 import { useAudio } from "@/components/audio/audio-provider";
@@ -242,6 +243,9 @@ export default function DashboardPage() {
   const [viewingProof, setViewingProof] = useState<any | null>(null);
   const [deletingProof, setDeletingProof] = useState<any | null>(null);
   const [replacingProof, setReplacingProof] = useState<any | null>(null);
+
+  // Level Up Celebration Animation Modal State
+  const [levelUpData, setLevelUpData] = useState<LevelUpData | null>(null);
   const [replaceFileUrl, setReplaceFileUrl] = useState("");
   const [replaceCaption, setReplaceCaption] = useState("");
   const [isReplacingProof, setIsReplacingProof] = useState(false);
@@ -521,7 +525,31 @@ export default function DashboardPage() {
     }
   };
 
-  const handleStatsUpdate = (newXP: number, currentStreak: number, consistencyRate?: number) => {
+  const handleStatsUpdate = (
+    newXP: number,
+    currentStreak: number,
+    consistencyRate?: number,
+    isLevelUp?: boolean,
+    milestone?: any
+  ) => {
+    // Exact Winter Arc Level Ladder Check: Day 1, 7, 14, 25, 30, 45, 52, 65, 75, 90
+    const levelInfo = calculateLevel(currentStreak);
+    const oldLevel = user?.profile?.level || 1;
+
+    const exactMilestoneDays = [1, 7, 14, 25, 30, 45, 52, 65, 75, 90];
+    const isExactMilestone = exactMilestoneDays.includes(currentStreak);
+
+    if ((isLevelUp || levelInfo.level > oldLevel || isExactMilestone) && currentStreak >= 1) {
+      setLevelUpData({
+        level: levelInfo.level,
+        tier: levelInfo.tier,
+        title: levelInfo.title,
+        quote: levelInfo.quote,
+        streak: currentStreak,
+        badgeColor: levelInfo.badgeColor,
+      });
+    }
+
     setUser((prev: any) => {
       if (!prev) return prev;
       const updatedStreak = {
@@ -533,7 +561,12 @@ export default function DashboardPage() {
       checkConsistency(habits, updatedStreak);
       return {
         ...prev,
-        profile: { ...prev.profile, totalXP: newXP },
+        profile: {
+          ...prev.profile,
+          totalXP: newXP,
+          level: levelInfo.level,
+          currentClass: levelInfo.tier,
+        },
         streak: updatedStreak,
       };
     });
@@ -2986,6 +3019,12 @@ export default function DashboardPage() {
           onClose={() => setIsCelebrationOpen(false)}
         />
       )}
+
+      {/* Strict Winter Arc Level Ladder Modal & Animation (Day 1, 7, 14, 25, 30, 45, 52, 65, 75, 90) */}
+      <LevelUpModal
+        data={levelUpData}
+        onClose={() => setLevelUpData(null)}
+      />
     </div>
   );
 }

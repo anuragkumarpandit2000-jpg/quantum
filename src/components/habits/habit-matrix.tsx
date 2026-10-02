@@ -24,7 +24,7 @@ export interface HabitItem {
 
 interface HabitMatrixProps {
   initialHabits: HabitItem[];
-  onStatsUpdate?: (newXP: number, currentStreak: number, consistencyRate?: number) => void;
+  onStatsUpdate?: (newXP: number, currentStreak: number, consistencyRate?: number, isLevelUp?: boolean, milestone?: any) => void;
   onHabitsChange?: (updatedHabits: HabitItem[]) => void;
   className?: string;
 }
@@ -104,7 +104,13 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
       if (res.ok) {
         const data = await res.json();
         if (onStatsUpdate && data.totalXP !== undefined) {
-          onStatsUpdate(data.totalXP, data.currentStreak, data.consistencyRate);
+          onStatsUpdate(
+            data.totalXP,
+            data.currentStreak,
+            data.consistencyRate,
+            data.isLevelUp,
+            data.milestone
+          );
         }
       }
     } catch (err) {

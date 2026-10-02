@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { calculateLevel } from "@/lib/utils";
 
 export async function PATCH(
   req: Request,
@@ -74,16 +75,6 @@ export async function PATCH(
       let newTotalXP = user.profile?.totalXP || 0;
       if (xpDelta !== 0) {
         newTotalXP = Math.max(0, newTotalXP + xpDelta);
-        const newLevel = Math.floor(newTotalXP / 1000) + 1;
-
-        await tx.profile.update({
-          where: { userId: user.id },
-          data: {
-            totalXP: newTotalXP,
-            level: newLevel,
-          },
-        });
-
         // Record XP transaction
         if (xpDelta > 0) {
           await tx.xPTransaction.create({
@@ -165,12 +156,32 @@ export async function PATCH(
         },
       });
 
+      // 4. Calculate Winter Arc Level by Continuous Streak Days
+      const levelData = calculateLevel(currentStreak);
+      const prevLevel = user.profile?.level || 1;
+      const isLevelUp =
+        levelData.level > prevLevel ||
+        (currentStreak === 1 && nextStatus === "COMPLETED" && dayNumber === 1);
+
+      await tx.profile.update({
+        where: { userId: user.id },
+        data: {
+          totalXP: newTotalXP,
+          level: levelData.level,
+          currentClass: levelData.tier,
+        },
+      });
+
       return {
         completion: updatedCompletion,
         totalXP: newTotalXP,
         currentStreak,
         longestStreak,
         consistencyRate,
+        level: levelData.level,
+        tier: levelData.tier,
+        isLevelUp,
+        milestone: levelData,
       };
     });
 
