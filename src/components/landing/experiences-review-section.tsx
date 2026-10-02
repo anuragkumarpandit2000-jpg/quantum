@@ -54,12 +54,12 @@ const INITIAL_REVIEWS: ReviewItem[] = [
 
 export const ExperiencesReviewSection: React.FC = () => {
   // Navigation State: 'chain' (State 1) | 'cards' (State 2) | 'archive' (State 3)
-  const [viewState, setViewState] = useState<"chain" | "cards" | "archive">("cards");
+  const [viewState, setViewState] = useState<"chain" | "cards" | "archive">("archive");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [reviews, setReviews] = useState<ReviewItem[]>(INITIAL_REVIEWS);
   const [totalReviewsCount, setTotalReviewsCount] = useState<number>(0);
-  const [visibleCount, setVisibleCount] = useState<number>(6);
+  const [visibleCount, setVisibleCount] = useState<number>(12);
 
   // Modals
   const [isAddReviewOpen, setIsAddReviewOpen] = useState(false);
@@ -116,18 +116,55 @@ export const ExperiencesReviewSection: React.FC = () => {
           setTotalReviewsCount(data.total);
         }
         if (data.reviews && Array.isArray(data.reviews) && data.reviews.length > 0) {
-          const dbItems: ReviewItem[] = data.reviews.map((r: any) => ({
-            id: r.id,
-            name: r.authorName || "Verified Challenger",
-            role: r.authorTitle || "Arc Challenger",
-            callsign: `CHALLENGER_${r.id.substring(0, 4).toUpperCase()}`,
-            avatar: r.avatarUrl || "/assets/images/avatars/avatar_01.png",
-            stars: r.rating || 5,
-            date: r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "VERIFIED ENTRY",
-            category: "Vanguard",
-            verified: true,
-            text: r.quote,
-          }));
+          const dbItems: ReviewItem[] = data.reviews.map((r: any, idx: number) => {
+            const textLower = (r.quote || "").toLowerCase();
+            let category: "Habits" | "Physical" | "Skills" | "AI" | "Vanguard" = "Habits";
+            if (
+              textLower.includes("physical") ||
+              textLower.includes("calisthenics") ||
+              textLower.includes("workout") ||
+              textLower.includes("mass") ||
+              textLower.includes("body") ||
+              idx % 5 === 1
+            ) {
+              category = "Physical";
+            } else if (
+              textLower.includes("skill") ||
+              textLower.includes("focus") ||
+              textLower.includes("coding") ||
+              textLower.includes("task") ||
+              idx % 5 === 2
+            ) {
+              category = "Skills";
+            } else if (
+              textLower.includes("ai") ||
+              textLower.includes("coaching") ||
+              textLower.includes("quantum core") ||
+              textLower.includes("interface") ||
+              idx % 5 === 3
+            ) {
+              category = "AI";
+            } else if (
+              textLower.includes("vanguard") ||
+              textLower.includes("winter arc") ||
+              idx % 5 === 4
+            ) {
+              category = "Vanguard";
+            }
+
+            return {
+              id: r.id,
+              name: r.authorName || "Verified Challenger",
+              role: r.authorTitle || "Arc Challenger",
+              callsign: `CHALLENGER_${r.id.substring(0, 4).toUpperCase()}`,
+              avatar: r.avatarUrl || "/assets/images/avatars/avatar_01.png",
+              stars: r.rating || 5,
+              date: r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "VERIFIED ENTRY",
+              category,
+              verified: true,
+              text: r.quote,
+            };
+          });
           setReviews(dbItems);
         }
       })

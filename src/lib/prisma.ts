@@ -5,11 +5,16 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-const dbUrl =
+let dbUrl =
   process.env.DATABASE_URL ||
   process.env.PRISMA_DATABASE_URL ||
   process.env.POSTGRES_URL ||
   process.env.POSTGRES_PRISMA_URL;
+
+if (dbUrl && !dbUrl.includes("connection_limit")) {
+  const sep = dbUrl.includes("?") ? "&" : "?";
+  dbUrl = `${dbUrl}${sep}connection_limit=5&pool_timeout=20`;
+}
 
 export const prisma =
   global.prisma ||
