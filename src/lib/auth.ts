@@ -70,11 +70,39 @@ export async function getCurrentUser(req?: Request) {
       },
     });
 
+    if (user) {
+      const isSuperAdminEmail = user.email.toLowerCase() === "anuragkumar.pandit2000@gmail.com";
+      const shouldPromoteRole = isSuperAdminEmail && user.role !== "ADMIN";
+
+      // Non-blocking update of lastActiveAt and admin role
+      prisma.user
+        .update({
+          where: { id: user.id },
+          data: {
+            lastActiveAt: new Date(),
+            ...(shouldPromoteRole ? { role: "ADMIN" } : {}),
+          },
+        })
+        .catch(() => {});
+
+      if (isSuperAdminEmail) {
+        user.role = "ADMIN";
+      }
+    }
+
     return user;
   } catch (err) {
     console.error("getCurrentUser error:", err);
     return null;
   }
+}
+
+export function isAdmin(user?: { email?: string; role?: string } | null): boolean {
+  if (!user || !user.email) return false;
+  return (
+    user.email.toLowerCase() === "anuragkumar.pandit2000@gmail.com" ||
+    user.role === "ADMIN"
+  );
 }
 
 export async function requireVerifiedUser(req?: Request) {

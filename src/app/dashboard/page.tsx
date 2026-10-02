@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Shield,
@@ -704,6 +705,18 @@ export default function DashboardPage() {
       if (res.ok) {
         const data = await res.json();
         setGallery((prev) => [data.item, ...prev]);
+        if (data.xpEarned) {
+          setUser((prev: any) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              profile: {
+                ...prev.profile,
+                totalXP: (prev.profile?.totalXP || 0) + data.xpEarned,
+              },
+            };
+          });
+        }
         setUploadCaption("");
         setUploadFileUrl("");
         setIsUploadModalOpen(false);
@@ -932,6 +945,19 @@ export default function DashboardPage() {
 
         {/* Bottom Nav Items: Settings & Log Out */}
         <div className="pt-4 border-t border-slate-900 space-y-1 font-mono text-xs">
+          {(user?.isAdmin || user?.email?.toLowerCase() === "anuragkumar.pandit2000@gmail.com" || user?.role === "ADMIN") && (
+            <Link
+              href="/admin"
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500/20 to-amber-500/20 border border-rose-500/40 text-rose-300 font-mono text-xs font-bold hover:scale-[1.02] transition shadow-[0_0_15px_rgba(244,63,94,0.2)] mb-2"
+            >
+              <div className="flex items-center gap-2">
+                <Shield size={16} className="text-rose-400" />
+                <span>SUPER ADMIN</span>
+              </div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/30 text-white font-mono">ROOT</span>
+            </Link>
+          )}
+
           <button
             onClick={() => {
               setActiveTab("SETTINGS");
@@ -983,7 +1009,17 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick HUD Metrics */}
-          <div className="flex items-center gap-4 sm:gap-6 font-mono text-xs">
+          <div className="flex items-center gap-3 sm:gap-4 font-mono text-xs">
+            {(user?.isAdmin || user?.email?.toLowerCase() === "anuragkumar.pandit2000@gmail.com" || user?.role === "ADMIN") && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 font-bold transition shadow-[0_0_15px_rgba(244,63,94,0.25)] text-xs"
+              >
+                <Shield size={13} className="text-rose-400" />
+                <span>ROOT ADMIN</span>
+              </Link>
+            )}
+
             {/* Streak */}
             <div className="flex items-center gap-1.5 text-amber-400 bg-amber-950/20 border border-amber-500/20 px-3 py-1 rounded-lg backdrop-blur-md">
               <Flame size={16} className="text-amber-400 animate-pulse" />

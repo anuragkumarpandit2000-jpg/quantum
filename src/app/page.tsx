@@ -37,6 +37,7 @@ import TubesCursor from "@/components/ui/tubes-cursor";
 import QuantumTiltCard from "@/components/ui/quantum-tilt-card";
 import QuantumMobileExperience from "@/components/landing/quantum-mobile-experience";
 import ExperiencesReviewSection from "@/components/landing/experiences-review-section";
+import { LiveProofFeedSection } from "@/components/landing/live-proof-feed-section";
 import AboutSection from "@/components/landing/about-section";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +48,25 @@ export default function LandingPage() {
   const [donationAmount, setDonationAmount] = useState("299");
   const [donorName, setDonorName] = useState("");
   const [donationStatus, setDonationStatus] = useState<string | null>(null);
+  const [liveTelemetry, setLiveTelemetry] = useState<{ liveNow: number; totalChallengers: number }>({
+    liveNow: 28,
+    totalChallengers: 1429,
+  });
+
+  // Fetch real-time live telemetry
+  useEffect(() => {
+    fetch("/api/telemetry/live")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.liveNow && data.totalChallengers) {
+          setLiveTelemetry({
+            liveNow: data.liveNow,
+            totalChallengers: data.totalChallengers,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Parallax tracking
   useEffect(() => {
@@ -108,10 +128,19 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#030712]/50 via-transparent to-[#030712]/40 pointer-events-none z-[1]" />
 
         <div className="relative z-10 max-w-5xl mx-auto text-center flex flex-col items-center space-y-8">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300 text-xs font-mono tracking-widest backdrop-blur-md shadow-[0_0_20px_rgba(56,189,248,0.25)]">
-            <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
-            WINTER ARC PROTOCOL INITIALIZED • 90 CONSECUTIVE DAYS
+          {/* Badge & Live Telemetry Pill */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300 text-xs font-mono tracking-widest backdrop-blur-md shadow-[0_0_20px_rgba(56,189,248,0.25)]">
+              <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
+              <span>WINTER ARC PROTOCOL • 90 CONSECUTIVE DAYS</span>
+            </div>
+
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/50 border border-emerald-500/40 text-emerald-400 text-xs font-mono tracking-wider backdrop-blur-md shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{liveTelemetry.totalChallengers.toLocaleString()} CHALLENGERS</span>
+              <span className="text-slate-600">•</span>
+              <span className="text-cyan-300 font-bold">{liveTelemetry.liveNow} ONLINE LIVE NOW</span>
+            </div>
           </div>
 
           {/* Dynamic Quantum Title with 3D DancingLetters physics */}
@@ -585,6 +614,11 @@ export default function LandingPage() {
           06 — REVIEWS & EXPERIENCES INTERACTIVE SECTION
           ============================================================ */}
       <ExperiencesReviewSection />
+
+      {/* ============================================================
+          06.5 — LIVE VISUAL PROOFS FEED (PUBLIC ONLY)
+          ============================================================ */}
+      <LiveProofFeedSection />
 
       {/* ============================================================
           07 — FEATURES / TACTICAL MODULES

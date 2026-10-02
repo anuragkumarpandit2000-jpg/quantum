@@ -68,14 +68,18 @@ export const LandingNavbar: React.FC = () => {
           <Link href="/#reviews" className="hover:text-sky-300 transition">
             04 • REVIEWS
           </Link>
+          <Link href="/#proof-feed" className="hover:text-cyan-300 transition text-cyan-400 font-bold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span>05 • PROOFS</span>
+          </Link>
           <Link href="/#mobile" className="hover:text-sky-300 transition">
-            05 • MOBILE
+            06 • MOBILE
           </Link>
           <Link href="/#donate" className="hover:text-sky-300 transition">
-            06 • SUPPORT
+            07 • SUPPORT
           </Link>
           <Link href="/#faq" className="hover:text-sky-300 transition">
-            07 • FAQ
+            08 • FAQ
           </Link>
         </div>
 
@@ -142,11 +146,19 @@ export const LandingNavbar: React.FC = () => {
             04 • COMMUNITY REVIEWS
           </Link>
           <Link
+            href="#proof-feed"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-cyan-400 font-bold hover:text-cyan-300 py-1 flex items-center gap-1.5"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span>05 • LIVE PROOFS FEED</span>
+          </Link>
+          <Link
             href="#mobile"
             onClick={() => setMobileMenuOpen(false)}
             className="text-slate-300 hover:text-sky-300 py-1"
           >
-            05 • QUANTUM MOBILE
+            06 • QUANTUM MOBILE
           </Link>
           <Link
             href="#donate"

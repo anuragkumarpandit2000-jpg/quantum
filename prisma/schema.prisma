@@ -17,6 +17,7 @@ model User {
   emailVerified    Boolean           @default(false)
   emailVerifiedAt  DateTime?
   lastVerificationSentAt DateTime?
+  lastActiveAt     DateTime          @default(now())
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 

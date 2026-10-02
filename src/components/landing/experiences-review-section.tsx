@@ -214,12 +214,41 @@ export const ExperiencesReviewSection: React.FC = () => {
     });
   }, [reviews, selectedCategory, searchQuery]);
 
-  const handleAddReviewSubmit = (e: React.FormEvent) => {
+  // Fetch live reviews from PostgreSQL database on mount
+  React.useEffect(() => {
+    fetch("/api/reviews")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.reviews && Array.isArray(data.reviews) && data.reviews.length > 0) {
+          const dbItems: ReviewItem[] = data.reviews.map((r: any) => ({
+            id: r.id,
+            name: r.authorName || "Verified Challenger",
+            role: r.authorTitle || "Arc Challenger",
+            callsign: `CHALLENGER_${r.id.substring(0, 4).toUpperCase()}`,
+            avatar: r.avatarUrl || "/assets/images/avatars/avatar_01.png",
+            stars: r.rating || 5,
+            date: r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "VERIFIED ENTRY",
+            category: "Vanguard",
+            verified: true,
+            text: r.quote,
+          }));
+          setReviews((prev) => {
+            const existingIds = new Set(dbItems.map((item) => item.id));
+            const uniquePrev = prev.filter((p) => !existingIds.has(p.id));
+            return [...dbItems, ...uniquePrev];
+          });
+        }
+      })
+      .catch((err) => console.error("Failed to load live reviews:", err));
+  }, []);
+
+  const handleAddReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAuthor || !newComment) return;
 
+    const tempId = `rev-${Date.now()}`;
     const newRev: ReviewItem = {
-      id: `rev-${Date.now()}`,
+      id: tempId,
       name: newAuthor,
       role: newRole || "Challenger",
       callsign: `CHALLENGER_${Math.floor(Math.random() * 90 + 10)}`,
@@ -236,10 +265,27 @@ export const ExperiencesReviewSection: React.FC = () => {
     setNewAuthor("");
     setNewRole("");
     setNewComment("");
-    showToast("Review verified and published to Quantum Archive.");
+    showToast("Review submitted to live Quantum Archive!");
+
+    try {
+      await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          authorName: newAuthor,
+          authorTitle: newRole || "Challenger",
+          rating: newRating,
+          quote: newComment,
+          avatarUrl: "/assets/images/avatars/avatar_11.jpg",
+        }),
+      });
+    } catch (err) {
+      console.error("Live review sync error:", err);
+    }
   };
 
-  const handleRateSubmit = () => {
+  const handleRateSubmit = async () => {
+    const quoteText = rateText || `Rated ${rateScore} Stars — Exceptional 90-day transformation experience in the Quantum Winter Arc.`;
     const newRev: ReviewItem = {
       id: `rev-${Date.now()}`,
       name: "Verified Challenger",
@@ -250,14 +296,30 @@ export const ExperiencesReviewSection: React.FC = () => {
       date: "JUST NOW • VERIFIED",
       category: "Vanguard",
       verified: true,
-      text: rateText || `Rated ${rateScore} Stars — Exceptional 90-day transformation experience in the Quantum Winter Arc.`,
+      text: quoteText,
     };
 
     setReviews([newRev, ...reviews]);
     setIsRateModalOpen(false);
     setRateStep(1);
     setRateText("");
-    showToast("Collaborative score verified in telemetry archive.");
+    showToast("Collaborative score saved to live database!");
+
+    try {
+      await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          authorName: "Verified Challenger",
+          authorTitle: rateSentiment,
+          rating: rateScore,
+          quote: quoteText,
+          avatarUrl: "/assets/images/avatars/avatar_12.jpg",
+        }),
+      });
+    } catch (err) {
+      console.error("Live rating sync error:", err);
+    }
   };
 
   return (
