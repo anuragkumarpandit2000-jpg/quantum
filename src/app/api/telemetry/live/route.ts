@@ -37,28 +37,18 @@ export async function GET() {
       }),
     ]);
 
-    // Calculate dynamic realistic live presence: real DB active + base pulse
-    const hour = new Date().getUTCHours();
-    const peakOffset = Math.sin((hour / 24) * Math.PI * 2) * 8; // gentle daily wave
-    const baselineLive = Math.max(12, Math.round(18 + peakOffset));
-    const liveNow = Math.max(dbActiveCount, 1) + baselineLive;
-
-    // Total challengers: real DB count + initial cohort baseline
-    const totalChallengers = Math.max(dbUserCount, 10) + 1420;
+    // Real live presence: active challengers in last 15 min (min 1 if users exist)
+    const liveNow = Math.max(dbActiveCount, dbUserCount > 0 ? 1 : 0);
+    const totalChallengers = dbUserCount;
 
     return NextResponse.json({
       status: "ONLINE",
       liveNow,
       dbActiveCount,
       totalChallengers,
-      totalCompletions: totalCompletions + 48200,
-      publicProofsCount: Math.max(publicProofsCount, 12),
-      topLeader: topLeader || {
-        name: "Tanishq M.",
-        username: "tanishq_arc",
-        totalXP: 8750,
-        currentClass: "Obsidian Sovereign",
-      },
+      totalCompletions,
+      publicProofsCount,
+      topLeader: topLeader || null,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -66,10 +56,11 @@ export async function GET() {
     return NextResponse.json(
       {
         status: "ONLINE",
-        liveNow: 28,
-        totalChallengers: 1429,
-        totalCompletions: 48920,
-        publicProofsCount: 16,
+        liveNow: 1,
+        totalChallengers: 1,
+        totalCompletions: 0,
+        publicProofsCount: 0,
+        topLeader: null,
       },
       { status: 200 }
     );

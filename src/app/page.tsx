@@ -52,8 +52,8 @@ export default function LandingPage() {
   // Cursor parallax state for hero background
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [liveTelemetry, setLiveTelemetry] = useState<{ liveNow: number; totalChallengers: number }>({
-    liveNow: 28,
-    totalChallengers: 1429,
+    liveNow: 1,
+    totalChallengers: 1,
   });
 
   // Fetch real-time live telemetry
@@ -61,7 +61,7 @@ export default function LandingPage() {
     fetch("/api/telemetry/live")
       .then((res) => res.json())
       .then((data) => {
-        if (data.liveNow && data.totalChallengers) {
+        if (typeof data.liveNow === "number" && typeof data.totalChallengers === "number") {
           setLiveTelemetry({
             liveNow: data.liveNow,
             totalChallengers: data.totalChallengers,

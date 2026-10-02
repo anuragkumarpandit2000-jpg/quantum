@@ -43,117 +43,6 @@ export interface ProofItem {
   };
 }
 
-const FALLBACK_COMMAND_PROOFS: ProofItem[] = [
-  {
-    id: "cp-1",
-    dayNumber: 52,
-    caption: "04:30 AM Wakeup • 5km weighted ruck + ice recovery. Unbroken Arc discipline.",
-    fileUrl: "/assets/images/avatars/avatar_16.jpg",
-    fileType: "image",
-    isPublic: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
-    user: {
-      name: "Tanishq M.",
-      username: "tanishq_arc",
-      profile: {
-        avatar: "/assets/images/avatars/avatar_16.jpg",
-        level: 7,
-        currentClass: "Arc Master",
-      },
-    },
-  },
-  {
-    id: "cp-2",
-    dayNumber: 30,
-    caption: "1/3rd of the Winter Arc conquered! 4 hours uninterrupted coding + clean nutrition.",
-    fileUrl: "/assets/images/avatars/avatar_17.jpg",
-    fileType: "image",
-    isPublic: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 95).toISOString(),
-    user: {
-      name: "Riddhi S.",
-      username: "riddhi_discipline",
-      profile: {
-        avatar: "/assets/images/avatars/avatar_17.jpg",
-        level: 5,
-        currentClass: "Quantum Adept",
-      },
-    },
-  },
-  {
-    id: "cp-3",
-    dayNumber: 25,
-    caption: "Day 25 milestone unlocked. Dopamine baseline permanently restored. 100 pushups done.",
-    fileUrl: "/assets/images/avatars/avatar_18.jpg",
-    fileType: "image",
-    isPublic: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-    user: {
-      name: "Raghav K.",
-      username: "raghav_forge",
-      profile: {
-        avatar: "/assets/images/avatars/avatar_18.jpg",
-        level: 4,
-        currentClass: "Focus Vanguard",
-      },
-    },
-  },
-  {
-    id: "cp-4",
-    dayNumber: 14,
-    caption: "Two weeks straight without skipping a single habit. The momentum is unstoppable.",
-    fileUrl: "/assets/images/avatars/avatar_19.jpg",
-    fileType: "image",
-    isPublic: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 320).toISOString(),
-    user: {
-      name: "Sameer P.",
-      username: "sameer_execution",
-      profile: {
-        avatar: "/assets/images/avatars/avatar_19.jpg",
-        level: 3,
-        currentClass: "Kinetic Operator",
-      },
-    },
-  },
-  {
-    id: "cp-5",
-    dayNumber: 7,
-    caption: "Week 1 completed! Obsidian persistence ratified. Level 2 upgrade sealed.",
-    fileUrl: "/assets/images/avatars/avatar_15.jpg",
-    fileType: "image",
-    isPublic: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 480).toISOString(),
-    user: {
-      name: "Arun V.",
-      username: "challenger_arc",
-      profile: {
-        avatar: "/assets/images/avatars/avatar_15.jpg",
-        level: 2,
-        currentClass: "Discipline Neophyte",
-      },
-    },
-  },
-  {
-    id: "cp-6",
-    dayNumber: 1,
-    caption: "Day 01 Quantum Induction ratified. The 90-day transformation begins right now.",
-    fileUrl: "/assets/images/avatars/avatar_20.jpg",
-    fileType: "image",
-    isPublic: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 620).toISOString(),
-    user: {
-      name: "Zoya B.",
-      username: "zoya_focus",
-      profile: {
-        avatar: "/assets/images/avatars/avatar_20.jpg",
-        level: 1,
-        currentClass: "Initiate Tier I",
-      },
-    },
-  },
-];
-
 interface LiveExecutionProofSectionProps {
   onOpenUploadModal: () => void;
   currentUserId?: string;
@@ -165,7 +54,7 @@ export const LiveExecutionProofSection: React.FC<LiveExecutionProofSectionProps>
   currentUserId,
   onSelectProof,
 }) => {
-  const [proofs, setProofs] = useState<ProofItem[]>(FALLBACK_COMMAND_PROOFS);
+  const [proofs, setProofs] = useState<ProofItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filterType, setFilterType] = useState<"all" | "mine" | "videos" | "photos">("all");
@@ -177,10 +66,8 @@ export const LiveExecutionProofSection: React.FC<LiveExecutionProofSectionProps>
       const res = await fetch("/api/gallery");
       if (res.ok) {
         const data = await res.json();
-        if (data.items && Array.isArray(data.items) && data.items.length > 0) {
-          const liveIds = new Set(data.items.map((i: any) => i.id));
-          const uniqueFallbacks = FALLBACK_COMMAND_PROOFS.filter((fb) => !liveIds.has(fb.id));
-          setProofs([...data.items, ...uniqueFallbacks]);
+        if (data.items && Array.isArray(data.items)) {
+          setProofs(data.items);
         }
       }
     } catch (e) {

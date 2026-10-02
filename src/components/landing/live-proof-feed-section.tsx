@@ -36,113 +36,8 @@ interface ProofItem {
   };
 }
 
-const FALLBACK_PROOFS: ProofItem[] = [
-  {
-    id: "fb-1",
-    dayNumber: 42,
-    caption: "5:00 AM Calisthenics & 10km Weighted Run completed. Zero missed days in the Arc.",
-    fileUrl: "/assets/images/avatars/avatar_16.jpg",
-    fileType: "image",
-    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-    user: {
-      name: "Tanishq M.",
-      username: "tanishq_arc",
-      profile: {
-        avatar: "/assets/images/avatars/avatar_16.jpg",
-        level: 9,
-        currentClass: "Obsidian Sovereign",
-      },
-    },
-  },
-  {
-    id: "fb-2",
-    dayNumber: 36,
-    caption: "4 Hours Deep Work on Rust Engine & Distributed Sharding Nodes. Focus locked.",
-    fileUrl: "/assets/images/avatars/avatar_17.jpg",
-    fileType: "image",
-    createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
-    user: {
-      name: "Riddhi S.",
-      username: "riddhi_discipline",
-      profile: {
-        avatar: "/assets/images/avatars/avatar_17.jpg",
-        level: 8,
-        currentClass: "Vanguard Titan",
-      },
-    },
-  },
-  {
-    id: "fb-3",
-    dayNumber: 28,
-    caption: "Cold exposure protocol followed by 100 pushups. Mind cleared of dopamine noise.",
-    fileUrl: "/assets/images/avatars/avatar_18.jpg",
-    fileType: "image",
-    createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
-    user: {
-      name: "Raghav K.",
-      username: "raghav_forge",
-      profile: {
-        avatar: "/assets/images/avatars/avatar_18.jpg",
-        level: 7,
-        currentClass: "Apex Sentinel",
-      },
-    },
-  },
-  {
-    id: "fb-4",
-    dayNumber: 22,
-    caption: "Blender 3D Geometric Shaders finalized. Skill milestone unlocked with 150 XP.",
-    fileUrl: "/assets/images/avatars/avatar_19.jpg",
-    fileType: "image",
-    createdAt: new Date(Date.now() - 3600000 * 20).toISOString(),
-    user: {
-      name: "Sameer P.",
-      username: "sameer_execution",
-      profile: {
-        avatar: "/assets/images/avatars/avatar_19.jpg",
-        level: 6,
-        currentClass: "Quantum Adept",
-      },
-    },
-  },
-  {
-    id: "fb-5",
-    dayNumber: 14,
-    caption: "Day 14 Matrix check: 5/5 daily habits locked unbroken. The inertia is real.",
-    fileUrl: "/assets/images/avatars/avatar_15.jpg",
-    fileType: "image",
-    createdAt: new Date(Date.now() - 3600000 * 28).toISOString(),
-    user: {
-      name: "Arun V.",
-      username: "challenger_arc",
-      profile: {
-        avatar: "/assets/images/avatars/avatar_15.jpg",
-        level: 5,
-        currentClass: "Quantum Adept",
-      },
-    },
-  },
-  {
-    id: "fb-6",
-    dayNumber: 18,
-    caption: "Reading Marcus Aurelius Meditations + 45-min kettlebell mobility sequence.",
-    fileUrl: "/assets/images/avatars/avatar_20.jpg",
-    fileType: "image",
-    createdAt: new Date(Date.now() - 3600000 * 36).toISOString(),
-    user: {
-      name: "Zoya B.",
-      username: "zoya_focus",
-      profile: {
-        avatar: "/assets/images/avatars/avatar_20.jpg",
-        level: 4,
-        currentClass: "Discipline Adept",
-      },
-    },
-  },
-];
-
 export const LiveProofFeedSection: React.FC = () => {
-  const [proofs, setProofs] = useState<ProofItem[]>(FALLBACK_PROOFS);
+  const [proofs, setProofs] = useState<ProofItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeModalProof, setActiveModalProof] = useState<ProofItem | null>(null);
   const [filterDay, setFilterDay] = useState<"all" | "early" | "advanced">("all");
@@ -151,11 +46,8 @@ export const LiveProofFeedSection: React.FC = () => {
     fetch("/api/gallery?publicOnly=true")
       .then((res) => res.json())
       .then((data) => {
-        if (data.items && Array.isArray(data.items) && data.items.length > 0) {
-          // Combine live DB proofs with fallbacks, removing duplicates
-          const liveIds = new Set(data.items.map((i: any) => i.id));
-          const uniqueFallbacks = FALLBACK_PROOFS.filter((fb) => !liveIds.has(fb.id));
-          setProofs([...data.items, ...uniqueFallbacks]);
+        if (data.items && Array.isArray(data.items)) {
+          setProofs(data.items);
         }
       })
       .catch((err) => console.error("Failed to load public gallery proof feed:", err))
@@ -248,7 +140,29 @@ export const LiveProofFeedSection: React.FC = () => {
         {/* ====================================================================
             PROOFS GRID (9:16 Vertical Ratio)
             ==================================================================== */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {filteredProofs.length === 0 ? (
+          <div className="p-12 rounded-3xl bg-slate-950/80 border border-slate-800 text-center space-y-4 max-w-lg mx-auto font-mono">
+            <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400 mx-auto">
+              <Camera size={26} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-white font-sans">
+                NO PUBLIC PROOFS LOGGED YET
+              </h3>
+              <p className="text-xs text-slate-400 font-sans leading-relaxed">
+                Be the first challenger to document your execution. Daily proof photos and videos in 9:16 vertical ratio appear here live once logged.
+              </p>
+            </div>
+            <a
+              href="/dashboard"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs font-mono transition"
+            >
+              <Sparkles size={14} />
+              LOG EXECUTION PROOF IN COMMAND CENTER
+            </a>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filteredProofs.map((item) => {
             const avatarUrl = item.user.profile?.avatar || "/assets/images/avatars/avatar_01.png";
             const currentClass = item.user.profile?.currentClass || "Initiate Challenger";
@@ -335,6 +249,7 @@ export const LiveProofFeedSection: React.FC = () => {
             );
           })}
         </div>
+        )}
 
         {/* Modal: Full 9:16 Story Lightbox */}
         {activeModalProof && (

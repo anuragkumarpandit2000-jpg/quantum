@@ -10,53 +10,69 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category") || "xp"; // "xp" | "streak" | "consistency"
 
-    // Fetch users with their profiles and streaks
-    const allUsers = await prisma.user.findMany({
-      where: {
-        settings: {
-          leaderboardVisible: true,
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        username: true,
-        createdAt: true,
-        profile: {
-          select: {
-            avatar: true,
-            level: true,
-            totalXP: true,
-            currentClass: true,
+    let orderByClause: any = { profile: { totalXP: "desc" } };
+    if (category === "streak") {
+      orderByClause = { streak: { currentStreak: "desc" } };
+    } else if (category === "consistency") {
+      orderByClause = { streak: { consistencyRate: "desc" } };
+    }
+
+    const [totalParticipants, rankedUsers] = await Promise.all([
+      prisma.user.count({
+        where: { settings: { leaderboardVisible: true } },
+      }),
+      prisma.user.findMany({
+        where: { settings: { leaderboardVisible: true } },
+        orderBy: orderByClause,
+        take: 50,
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          createdAt: true,
+          profile: {
+            select: {
+              avatar: true,
+              level: true,
+              totalXP: true,
+              currentClass: true,
+            },
+          },
+          streak: {
+            select: {
+              currentStreak: true,
+              longestStreak: true,
+              consistencyRate: true,
+            },
           },
         },
-        streak: {
-          select: {
-            currentStreak: true,
-            longestStreak: true,
-            consistencyRate: true,
-          },
-        },
-      },
-    });
+      }),
+    ]);
 
-    // Rank users based on category
-    const rankedUsers = [...allUsers].sort((a, b) => {
-      if (category === "streak") {
-        return (b.streak?.currentStreak || 0) - (a.streak?.currentStreak || 0);
-      }
-      if (category === "consistency") {
-        return (b.streak?.consistencyRate || 0) - (a.streak?.consistencyRate || 0);
-      }
-      // default: XP
-      return (b.profile?.totalXP || 0) - (a.profile?.totalXP || 0);
-    });
-
-    const totalParticipants = rankedUsers.length;
     let currentUserRank = -1;
 
     if (user) {
-      currentUserRank = rankedUsers.findIndex((u) => u.id === user.id) + 1;
+      const topIndex = rankedUsers.findIndex((u) => u.id === user.id);
+      if (topIndex >= 0) {
+        currentUserRank = topIndex + 1;
+      } else {
+        if (category === "streak") {
+          const higher = await prisma.streak.count({
+            where: { currentStreak: { gt: user.streak?.currentStreak || 0 } },
+          });
+          currentUserRank = higher + 1;
+        } else if (category === "consistency") {
+          const higher = await prisma.streak.count({
+            where: { consistencyRate: { gt: user.streak?.consistencyRate || 0 } },
+          });
+          currentUserRank = higher + 1;
+        } else {
+          const higher = await prisma.profile.count({
+            where: { totalXP: { gt: user.profile?.totalXP || 0 } },
+          });
+          currentUserRank = higher + 1;
+        }
+      }
     }
 
     return NextResponse.json({

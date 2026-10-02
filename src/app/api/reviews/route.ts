@@ -4,14 +4,23 @@ import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const reviews = await prisma.feedback.findMany({
-      where: { isApproved: true },
-      orderBy: { createdAt: "desc" },
-    });
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get("limit") || "150", 10)), 500);
 
-    return NextResponse.json({ reviews });
+    const [reviews, totalCount] = await Promise.all([
+      prisma.feedback.findMany({
+        where: { isApproved: true },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+      }),
+      prisma.feedback.count({
+        where: { isApproved: true },
+      }),
+    ]);
+
+    return NextResponse.json({ reviews, total: totalCount });
   } catch (error) {
     console.error("GET /api/reviews error:", error);
     return NextResponse.json({ error: "Failed to fetch reviews" }, { status: 500 });

@@ -39,124 +39,16 @@ export interface ReviewItem {
 
 const INITIAL_REVIEWS: ReviewItem[] = [
   {
-    id: "rev-1",
-    name: "Arjun",
-    role: "Student & Full-Stack Architect",
-    callsign: "VANGUARD_09",
-    avatar: "/assets/images/avatars/avatar_09.jpg",
+    id: "rev-anurag",
+    name: "Anurag P.",
+    role: "Lead Architect",
+    callsign: "ARCHITECT_01",
+    avatar: "/assets/images/logo/logo.png",
     stars: 5,
-    date: "DAY 78 • UNBROKEN",
+    date: "DAY 90 • UNBROKEN",
     category: "Vanguard",
     verified: true,
-    text: "Finally, a productivity concept that combines habits, analytics, AI and competition in one place. The whole Quantum experience feels completely different from a normal checkbox tracker.",
-  },
-  {
-    id: "rev-2",
-    name: "Aarav",
-    role: "Engineering Challenger",
-    callsign: "VANGUARD_01",
-    avatar: "/assets/images/avatars/avatar_01.png",
-    stars: 5,
-    date: "DAY 64 • UNBROKEN",
-    category: "Habits",
-    verified: true,
-    text: "Quantum makes my 90-day goals feel much more organized. The horizontal habit matrix and XP engine make it satisfying to lock in and execute every single morning.",
-  },
-  {
-    id: "rev-3",
-    name: "Rohan",
-    role: "Systems Specialist",
-    callsign: "VANGUARD_02",
-    avatar: "/assets/images/avatars/avatar_02.png",
-    stars: 5,
-    date: "DAY 52 • UNBROKEN",
-    category: "Skills",
-    verified: true,
-    text: "I really like how everything is integrated into one interface instead of juggling multiple apps. The progress analytics make my consistency bottlenecks immediately visible.",
-  },
-  {
-    id: "rev-4",
-    name: "Ananya",
-    role: "Cognitive AI Researcher",
-    callsign: "VANGUARD_03",
-    avatar: "/assets/images/avatars/avatar_03.png",
-    stars: 5,
-    date: "DAY 45 • UNBROKEN",
-    category: "AI",
-    verified: true,
-    text: "The Quantum Core AI is an exceptional concept. It feels like having a personal coach that actually understands my arc, breaks down friction, and tracks real consistency.",
-  },
-  {
-    id: "rev-5",
-    name: "Kabir",
-    role: "Athletic Disciplinarian",
-    callsign: "VANGUARD_04",
-    avatar: "/assets/images/avatars/avatar_04.jpg",
-    stars: 5,
-    date: "DAY 88 • UNBROKEN",
-    category: "Physical",
-    verified: true,
-    text: "The 90-day Winter Arc structure makes discipline feel like an actual mission. I especially respect the streak integrity—no fake vanity points or synthetic fluff.",
-  },
-  {
-    id: "rev-6",
-    name: "Dev",
-    role: "Digital Designer & Creator",
-    callsign: "VANGUARD_05",
-    avatar: "/assets/images/avatars/avatar_05.jpg",
-    stars: 4,
-    date: "DAY 31 • ACTIVE",
-    category: "Habits",
-    verified: true,
-    text: "The interface looks extremely clean, dark, and futuristic. The habit tracker is simple enough to use every day without feeling cumbersome, and the audio design is top notch.",
-  },
-  {
-    id: "rev-7",
-    name: "Vihaan",
-    role: "Competitive Challenger",
-    callsign: "VANGUARD_06",
-    avatar: "/assets/images/avatars/avatar_06.jpg",
-    stars: 5,
-    date: "DAY 60 • UNBROKEN",
-    category: "Vanguard",
-    verified: true,
-    text: "I love the idea of earning XP for completing real-life goals. Seeing effort convert into measurable levels makes the Winter Arc journey deeply rewarding.",
-  },
-  {
-    id: "rev-8",
-    name: "Aditya",
-    role: "Software Engineer",
-    callsign: "VANGUARD_07",
-    avatar: "/assets/images/avatars/avatar_07.jpg",
-    stars: 5,
-    date: "DAY 40 • ACTIVE",
-    category: "Skills",
-    verified: true,
-    text: "The skills decomposer is one of my favourite capabilities. Breaking down huge targets like Rust or Blender into tiny actionable quests eliminates cognitive overwhelm.",
-  },
-  {
-    id: "rev-9",
-    name: "Ishaan",
-    role: "Tactical Strategist",
-    callsign: "VANGUARD_08",
-    avatar: "/assets/images/avatars/avatar_08.jpg",
-    stars: 5,
-    date: "DAY 70 • UNBROKEN",
-    category: "Vanguard",
-    verified: true,
-    text: "The competition leaderboard adds a serious layer of positive peer pressure. You can see fellow challengers locking in simultaneously while focusing on your own daily reps.",
-  },
-  {
-    id: "rev-10",
-    name: "Reyansh",
-    role: "Winter Arc Veteran",
-    callsign: "VANGUARD_10",
-    avatar: "/assets/images/avatars/avatar_10.jpg",
-    stars: 5,
-    date: "DAY 90 • APEX COMPLETED",
-    category: "Physical",
-    verified: true,
-    text: "The 90-day concept is simple but relentlessly powerful. Having a verifiable record of daily effort and photographic proof made this my most transformative winter ever.",
+    text: "The real-time telemetry, 90-day matrix, and live proof feed in Quantum are second to none. Pure discipline execution.",
   },
 ];
 
@@ -166,6 +58,7 @@ export const ExperiencesReviewSection: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [reviews, setReviews] = useState<ReviewItem[]>(INITIAL_REVIEWS);
+  const [totalReviewsCount, setTotalReviewsCount] = useState<number>(0);
   const [visibleCount, setVisibleCount] = useState<number>(6);
 
   // Modals
@@ -216,9 +109,12 @@ export const ExperiencesReviewSection: React.FC = () => {
 
   // Fetch live reviews from PostgreSQL database on mount
   React.useEffect(() => {
-    fetch("/api/reviews")
+    fetch("/api/reviews?limit=250")
       .then((res) => res.json())
       .then((data) => {
+        if (data.total) {
+          setTotalReviewsCount(data.total);
+        }
         if (data.reviews && Array.isArray(data.reviews) && data.reviews.length > 0) {
           const dbItems: ReviewItem[] = data.reviews.map((r: any) => ({
             id: r.id,
@@ -232,11 +128,7 @@ export const ExperiencesReviewSection: React.FC = () => {
             verified: true,
             text: r.quote,
           }));
-          setReviews((prev) => {
-            const existingIds = new Set(dbItems.map((item) => item.id));
-            const uniquePrev = prev.filter((p) => !existingIds.has(p.id));
-            return [...dbItems, ...uniquePrev];
-          });
+          setReviews(dbItems);
         }
       })
       .catch((err) => console.error("Failed to load live reviews:", err));
@@ -382,7 +274,7 @@ export const ExperiencesReviewSection: React.FC = () => {
               )}
             >
               <Star size={13} className="text-amber-400" />
-              <span>50+ Archive & Reviews</span>
+              <span>{totalReviewsCount > 0 ? `${totalReviewsCount.toLocaleString()}+ Archive & Reviews` : "Archive & Reviews"}</span>
             </button>
           </div>
         </div>
@@ -606,7 +498,7 @@ export const ExperiencesReviewSection: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-300 font-mono">
-                    50+
+                    {totalReviewsCount > 0 ? `${totalReviewsCount.toLocaleString()}+` : "11,000+"}
                   </div>
                   <span className="text-[10px] font-mono text-sky-300 bg-sky-500/20 px-2.5 py-1 rounded-full border border-sky-400/30">
                     EXPANDED INDEX
@@ -797,7 +689,7 @@ export const ExperiencesReviewSection: React.FC = () => {
             {visibleCount < filteredReviews.length && (
               <div className="flex flex-col items-center justify-center gap-2 pt-4">
                 <span className="text-xs font-mono text-slate-500">
-                  Displaying {Math.min(visibleCount, filteredReviews.length)} of {filteredReviews.length} experiences
+                  Displaying {Math.min(visibleCount, filteredReviews.length)} of {totalReviewsCount ? totalReviewsCount.toLocaleString() : filteredReviews.length} experiences
                 </span>
                 <button
                   onClick={() => setVisibleCount((prev) => prev + 6)}
