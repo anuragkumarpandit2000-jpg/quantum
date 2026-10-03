@@ -17,21 +17,26 @@ export const QuantumTypographyVideoSection: React.FC<QuantumTypographyVideoSecti
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const sectionRef = useRef<HTMLDivElement | null>(null);
 
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isCtaHovered, setIsCtaHovered] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [audioNeedsInteraction, setAudioNeedsInteraction] = useState(false);
 
-  // Autoplay with sound & IntersectionObserver
+  // Instant Autoplay and Browser Audio Strategy
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
+    // Check if video is already ready in browser cache
+    if (video.readyState >= 2) {
+      setIsVideoLoaded(true);
+    }
+
     video.volume = 1.0;
 
-    const attemptPlay = async () => {
-      // 1. Try unmuted audio playback directly
+    const startPlayback = async () => {
+      // 1. Try unmuted playback first
       try {
         video.muted = false;
         await video.play();
@@ -39,7 +44,7 @@ export const QuantumTypographyVideoSection: React.FC<QuantumTypographyVideoSecti
         setIsMuted(false);
         setAudioNeedsInteraction(false);
       } catch {
-        // 2. If browser autoplay policy blocks unmuted audio on load, start muted and wait for user gesture
+        // 2. Fallback to muted playback instantly without stalling
         try {
           video.muted = true;
           setIsMuted(true);
@@ -47,14 +52,14 @@ export const QuantumTypographyVideoSection: React.FC<QuantumTypographyVideoSecti
           await video.play();
           setIsPlaying(true);
         } catch {
-          // Playback deferred
+          // Playback deferred by browser
         }
       }
     };
 
-    // Auto-unmute on first user interaction anywhere on the document
-    const handleFirstUserInteraction = () => {
-      if (video && video.muted) {
+    // Auto-unmute on very first user gesture anywhere on page
+    const handleFirstGesture = () => {
+      if (video) {
         video.muted = false;
         video.volume = 1.0;
         video
@@ -69,35 +74,39 @@ export const QuantumTypographyVideoSection: React.FC<QuantumTypographyVideoSecti
     };
 
     const cleanupListeners = () => {
-      window.removeEventListener("click", handleFirstUserInteraction);
-      window.removeEventListener("touchstart", handleFirstUserInteraction);
-      window.removeEventListener("keydown", handleFirstUserInteraction);
-      window.removeEventListener("scroll", handleFirstUserInteraction);
+      window.removeEventListener("click", handleFirstGesture);
+      window.removeEventListener("touchstart", handleFirstGesture);
+      window.removeEventListener("keydown", handleFirstGesture);
+      window.removeEventListener("scroll", handleFirstGesture);
     };
 
-    window.addEventListener("click", handleFirstUserInteraction, { once: true, passive: true });
-    window.addEventListener("touchstart", handleFirstUserInteraction, { once: true, passive: true });
-    window.addEventListener("keydown", handleFirstUserInteraction, { once: true, passive: true });
-    window.addEventListener("scroll", handleFirstUserInteraction, { once: true, passive: true });
+    window.addEventListener("click", handleFirstGesture, { once: true, passive: true });
+    window.addEventListener("touchstart", handleFirstGesture, { once: true, passive: true });
+    window.addEventListener("keydown", handleFirstGesture, { once: true, passive: true });
+    window.addEventListener("scroll", handleFirstGesture, { once: true, passive: true });
 
+    // IntersectionObserver to auto-play when visible & pause when scrolled away
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          attemptPlay();
+          startPlayback();
         } else {
           video.pause();
           setIsPlaying(false);
         }
       },
       {
-        threshold: 0.25,
-        rootMargin: "50px 0px",
+        threshold: 0.15,
+        rootMargin: "100px 0px",
       }
     );
 
     if (sectionRef.current) {
       observer.observe(sectionRef.current);
     }
+
+    // Direct kickoff for above-the-fold or immediate loads
+    startPlayback();
 
     return () => {
       observer.disconnect();
@@ -193,24 +202,25 @@ export const QuantumTypographyVideoSection: React.FC<QuantumTypographyVideoSecti
 
         {/* Video Player Container with precise 16:9 aspect ratio */}
         <div className="relative w-full aspect-video bg-black overflow-hidden select-none">
-          {/* Native Typography Video */}
+          {/* Native Typography Video - Instant render with faststart & poster */}
           <video
             ref={videoRef}
             src="/assets/videos/typography_landing.mp4"
+            poster="/assets/videos/typography_poster.jpg"
             autoPlay
             loop
+            muted
             playsInline
             controls={false}
             preload="auto"
+            onCanPlay={() => setIsVideoLoaded(true)}
             onLoadedData={() => setIsVideoLoaded(true)}
-            className={cn(
-              "w-full h-full object-cover transition-opacity duration-700",
-              isVideoLoaded ? "opacity-100" : "opacity-0"
-            )}
+            onPlaying={() => setIsPlaying(true)}
+            className="w-full h-full object-cover"
           />
 
           {/* ============================================================
-              SIDE MUTE / UNMUTE BUTTON (ALWAY VISIBLE ON SIDE)
+              SIDE MUTE / UNMUTE BUTTON (ALWAYS VISIBLE ON SIDE)
               ============================================================ */}
           <div className="absolute top-4 right-4 z-30">
             <button
@@ -243,16 +253,6 @@ export const QuantumTypographyVideoSection: React.FC<QuantumTypographyVideoSecti
               )}
             </button>
           </div>
-
-          {/* Fallback / Loading Skeleton */}
-          {!isVideoLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-950">
-              <div className="flex flex-col items-center gap-3 text-slate-500 font-mono text-xs">
-                <div className="w-8 h-8 rounded-full border-2 border-sky-400/40 border-t-transparent animate-spin" />
-                <span>INITIALIZING SYSTEM VIDEO...</span>
-              </div>
-            </div>
-          )}
 
           {/* ============================================================
               INTERACTIVE CTA OVERLAY ("VIEW FULL ABOUT SPECIFICATION ↗")
