@@ -164,7 +164,7 @@ export const LiveProofFeedSection: React.FC = () => {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filteredProofs.map((item) => {
-            const avatarUrl = item.user.profile?.avatar || "/assets/images/avatars/avatar_01.png";
+            const avatarUrl = item.user.profile?.avatar || "/assets/images/avatars/default_avatar.svg";
             const currentClass = item.user.profile?.currentClass || "Initiate Challenger";
             const level = item.user.profile?.level || 1;
             const isVideo =
@@ -265,7 +265,7 @@ export const LiveProofFeedSection: React.FC = () => {
                 <div className="flex items-center gap-2.5">
                   <div className="relative w-8 h-8 rounded-full overflow-hidden border border-cyan-400">
                     <Image
-                      src={activeModalProof.user.profile?.avatar || "/assets/images/avatars/avatar_01.png"}
+                      src={activeModalProof.user.profile?.avatar || "/assets/images/avatars/default_avatar.svg"}
                       alt={activeModalProof.user.name}
                       fill
                       className="object-cover"

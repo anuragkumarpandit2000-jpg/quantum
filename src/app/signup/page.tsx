@@ -8,6 +8,7 @@ import { Shield, ChevronLeft, AtSign, Lock, User, ArrowRight, Loader2 } from "lu
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FloatingPaths from "@/components/ui/floating-paths";
+import ProfileAvatarUploader from "@/components/ui/profile-avatar-uploader";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function SignupPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [avatar, setAvatar] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,7 +29,7 @@ export default function SignupPage() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, username, email, password }),
+        body: JSON.stringify({ name, username, email, password, avatar }),
       });
 
       const data = await res.json();
@@ -109,6 +111,21 @@ export default function SignupPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-3.5 font-mono text-xs">
+            {/* Challenger Profile Photo Upload with Drag-Crop */}
+            <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 flex flex-col items-center justify-center space-y-2 text-center">
+              <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase">
+                PROFILE PHOTO (OPTIONAL)
+              </span>
+              <ProfileAvatarUploader
+                currentAvatar={avatar}
+                onAvatarChange={(newUrl) => setAvatar(newUrl)}
+                size="md"
+              />
+              <span className="text-[10px] text-slate-500 font-sans">
+                Upload image • Drag to reposition face inside circle
+              </span>
+            </div>
+
             <div className="space-y-1">
               <label className="text-slate-400">FULL NAME</label>
               <div className="relative">

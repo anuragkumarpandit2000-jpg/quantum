@@ -528,17 +528,17 @@ export default function LandingPage() {
               className="flex items-center gap-3 px-4 py-3 shadow-lg"
             >
               <div className="flex -space-x-3 shrink-0">
-                {[11, 12, 13, 14].map((id) => (
+                {[1, 2, 3, 4].map((id) => (
                   <div
                     key={id}
-                    className="relative w-10 h-10 rounded-full border-2 border-sky-400/50 overflow-hidden shrink-0 aspect-square shadow-[0_0_10px_rgba(56,189,248,0.3)]"
+                    className="relative w-10 h-10 rounded-full border-2 border-sky-400/50 overflow-hidden shrink-0 aspect-square shadow-[0_0_10px_rgba(56,189,248,0.3)] bg-slate-900"
                   >
                     <Image
-                      src={`/assets/images/avatars/avatar_${id}.jpg`}
+                      src="/assets/images/avatars/default_avatar.svg"
                       alt={`Challenger ${id}`}
                       fill
                       sizes="40px"
-                      className="rounded-full object-cover object-center"
+                      className="rounded-full object-cover object-center p-1"
                     />
                   </div>
                 ))}

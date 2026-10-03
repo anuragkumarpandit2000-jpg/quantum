@@ -468,7 +468,7 @@ export default function AdminPage() {
                     </tr>
                   ) : (
                     filteredUsers.map((u) => {
-                      const avatar = u.profile?.avatar || "/assets/images/avatars/avatar_01.png";
+                      const avatar = u.profile?.avatar || "/assets/images/avatars/default_avatar.svg";
                       const totalXP = u.profile?.totalXP || 0;
                       const level = u.profile?.level || 1;
                       const currentStreak = u.streak?.currentStreak || 0;

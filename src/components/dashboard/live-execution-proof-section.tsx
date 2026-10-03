@@ -258,7 +258,7 @@ export const LiveExecutionProofSection: React.FC<LiveExecutionProofSectionProps>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-4">
           {filteredProofs.map((item) => {
             const hasVideo = isVideo(item);
-            const avatarUrl = item.user?.profile?.avatar || "/assets/images/avatars/avatar_01.png";
+            const avatarUrl = item.user?.profile?.avatar || "/assets/images/avatars/default_avatar.svg";
             const level = item.user?.profile?.level || 1;
             const authorName = item.user?.name || "Challenger";
 
@@ -370,7 +370,7 @@ export const LiveExecutionProofSection: React.FC<LiveExecutionProofSectionProps>
               <div className="flex items-center gap-2.5">
                 <div className="relative w-8 h-8 rounded-full overflow-hidden border border-cyan-400">
                   <Image
-                    src={activeStoryModal.user?.profile?.avatar || "/assets/images/avatars/avatar_01.png"}
+                    src={activeStoryModal.user?.profile?.avatar || "/assets/images/avatars/default_avatar.svg"}
                     alt={activeStoryModal.user?.name || "Challenger"}
                     fill
                     className="object-cover"

@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password, username, name } = body;
+    const { email, password, username, name, avatar } = body;
 
     if (!email || !password || !username) {
       return NextResponse.json(
@@ -61,22 +61,10 @@ export async function POST(req: Request) {
     }
 
     const passwordHash = hashPassword(password);
-
-    const defaultAvatars = [
-      "/assets/images/avatars/avatar_01.png",
-      "/assets/images/avatars/avatar_02.png",
-      "/assets/images/avatars/avatar_03.png",
-      "/assets/images/avatars/avatar_04.jpg",
-      "/assets/images/avatars/avatar_05.jpg",
-      "/assets/images/avatars/avatar_06.jpg",
-      "/assets/images/avatars/avatar_07.jpg",
-      "/assets/images/avatars/avatar_08.jpg",
-      "/assets/images/avatars/avatar_09.jpg",
-      "/assets/images/avatars/avatar_10.jpg",
-      "/assets/images/avatars/avatar_11.jpg",
-      "/assets/images/avatars/avatar_12.jpg",
-    ];
-    const defaultAvatar = defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
+    const resolvedAvatar =
+      typeof avatar === "string" && avatar.trim().length > 0
+        ? avatar.trim()
+        : "/assets/images/avatars/default_avatar.svg";
 
     // 3. Create user with emailVerified = false (Production requirement)
     const user = await prisma.user.create({
@@ -90,7 +78,7 @@ export async function POST(req: Request) {
         lastVerificationSentAt: new Date(),
         profile: {
           create: {
-            avatar: defaultAvatar,
+            avatar: resolvedAvatar,
             totalXP: 0,
             targetXP: 10000,
             level: 1,

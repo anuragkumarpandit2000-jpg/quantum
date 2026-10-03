@@ -639,7 +639,7 @@ export const QuantumMobileExperience: React.FC = () => {
               </div>
               <div className="relative w-16 h-20 rounded-lg overflow-hidden border border-sky-400/40 shrink-0">
                 <Image
-                  src="/assets/images/review character/photo_2026-09-30_20-56-40.jpg"
+                  src="/assets/images/transformation_after.png"
                   alt="Daily Transformation Proof"
                   fill
                   className="object-cover"
@@ -911,7 +911,7 @@ export const QuantumMobileExperience: React.FC = () => {
             <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/90 border border-sky-500/30">
               <div className="relative w-10 h-10 rounded-full overflow-hidden border border-sky-400 shrink-0">
                 <Image
-                  src="/assets/images/review character/02a2226d-1a2f-4d17-9fe5-da9a5b217889.png"
+                  src="/assets/images/avatars/default_avatar.svg"
                   alt="Challenger Avatar"
                   fill
                   className="object-cover"

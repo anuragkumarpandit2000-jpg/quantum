@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
     const resolvedName = authorName?.trim() || user?.name || "Challenger";
     const resolvedTitle = authorTitle?.trim() || "Winter Arc Challenger";
-    const resolvedAvatar = avatarUrl || user?.profile?.avatar || "/assets/images/avatars/avatar_01.png";
+    const resolvedAvatar = avatarUrl || user?.profile?.avatar || "/assets/images/avatars/default_avatar.svg";
     const resolvedRating = Math.min(5, Math.max(1, parseInt(rating, 10) || 5));
 
     const newFeedback = await prisma.feedback.create({

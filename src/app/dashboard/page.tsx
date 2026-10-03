@@ -58,6 +58,7 @@ import QuantumCompletionCertificate, {
   downloadCertificateImage,
   QuantumCertificateData,
 } from "@/components/certificate/quantum-completion-certificate";
+import AvatarCropModal from "@/components/ui/avatar-crop-modal";
 import ArcCompletionCelebration from "@/components/certificate/arc-completion-celebration";
 import { LevelUpModal, LevelUpData } from "@/components/ui/level-up-modal";
 import { LiveExecutionProofSection } from "@/components/dashboard/live-execution-proof-section";
@@ -274,6 +275,7 @@ export default function DashboardPage() {
   const [customAvatarInput, setCustomAvatarInput] = useState("");
   const [avatarSuccessMsg, setAvatarSuccessMsg] = useState("");
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
+  const [cropModalSrc, setCropModalSrc] = useState<string | null>(null);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   // 90-Day Arc Completion Certificate & Celebration State
   const [isArcCompleted, setIsArcCompleted] = useState(false);
@@ -373,20 +375,20 @@ export default function DashboardPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    try {
-      setIsAvatarUploading(true);
-      const compressedDataUrl = await compressImageFile(file, 512, 512, 0.9, true);
-      await handleSelectAvatar(compressedDataUrl);
-      setAvatarSuccessMsg("Profile photo updated from gallery!");
+    if (!file.type.startsWith("image/")) {
+      setAvatarSuccessMsg("Please choose an image file (JPG, PNG, WebP).");
       setTimeout(() => setAvatarSuccessMsg(""), 3500);
-    } catch (err) {
-      console.error("Profile gallery upload error:", err);
-      setAvatarSuccessMsg("Failed to upload image from device.");
-      setTimeout(() => setAvatarSuccessMsg(""), 3500);
-    } finally {
-      setIsAvatarUploading(false);
-      if (e.target) e.target.value = "";
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setCropModalSrc(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+    if (e.target) e.target.value = "";
   };
 
   // Direct Gallery Selection for Daily Proof of Work (9:16 Photo or Video)
@@ -1744,7 +1746,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="relative w-16 h-16 rounded-full mx-auto border-2 border-sky-400/40 overflow-hidden shadow-lg aspect-square">
                         <Image
-                          src={u.profile?.avatar || "/assets/images/avatars/avatar_01.png"}
+                          src={u.profile?.avatar || "/assets/images/avatars/default_avatar.svg"}
                           alt={u.name}
                           fill
                           className="rounded-full object-cover object-center"
@@ -1791,7 +1793,7 @@ export default function DashboardPage() {
                           <td className="p-3.5 flex items-center gap-2.5">
                             <div className="relative w-7 h-7 rounded-full border border-sky-400/30 overflow-hidden shrink-0 aspect-square">
                               <Image
-                                src={u.profile?.avatar || "/assets/images/avatars/avatar_01.png"}
+                                src={u.profile?.avatar || "/assets/images/avatars/default_avatar.svg"}
                                 alt={u.name}
                                 fill
                                 className="rounded-full object-cover object-center"
@@ -3222,6 +3224,19 @@ export default function DashboardPage() {
         isOpen={isSupportModalOpen}
         onClose={() => setIsSupportModalOpen(false)}
       />
+
+      {/* Interactive Avatar Drag-and-Crop Modal */}
+      {cropModalSrc && (
+        <AvatarCropModal
+          isOpen={!!cropModalSrc}
+          imageSrc={cropModalSrc}
+          onClose={() => setCropModalSrc(null)}
+          onCropComplete={async (croppedUrl) => {
+            await handleSelectAvatar(croppedUrl);
+            setCropModalSrc(null);
+          }}
+        />
+      )}
     </div>
   );
 }

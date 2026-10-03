@@ -157,7 +157,7 @@ export const ExperiencesReviewSection: React.FC = () => {
               name: r.authorName || "Verified Challenger",
               role: r.authorTitle || "Arc Challenger",
               callsign: `CHALLENGER_${r.id.substring(0, 4).toUpperCase()}`,
-              avatar: r.avatarUrl || "/assets/images/avatars/avatar_01.png",
+              avatar: r.avatarUrl || "/assets/images/avatars/default_avatar.svg",
               stars: r.rating || 5,
               date: r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "VERIFIED ENTRY",
               category,
@@ -181,7 +181,7 @@ export const ExperiencesReviewSection: React.FC = () => {
       name: newAuthor,
       role: newRole || "Challenger",
       callsign: `CHALLENGER_${Math.floor(Math.random() * 90 + 10)}`,
-      avatar: "/assets/images/avatars/avatar_11.jpg",
+      avatar: "/assets/images/avatars/default_avatar.svg",
       stars: newRating,
       date: `DAY ${Math.floor(Math.random() * 30 + 1)} • NEW ENTRY`,
       category: newCategory,
@@ -205,7 +205,7 @@ export const ExperiencesReviewSection: React.FC = () => {
           authorTitle: newRole || "Challenger",
           rating: newRating,
           quote: newComment,
-          avatarUrl: "/assets/images/avatars/avatar_11.jpg",
+          avatarUrl: "/assets/images/avatars/default_avatar.svg",
         }),
       });
     } catch (err) {
@@ -220,7 +220,7 @@ export const ExperiencesReviewSection: React.FC = () => {
       name: "Verified Challenger",
       role: rateSentiment,
       callsign: `RATED_${rateScore}.0`,
-      avatar: "/assets/images/avatars/avatar_12.jpg",
+      avatar: "/assets/images/avatars/default_avatar.svg",
       stars: rateScore,
       date: "JUST NOW • VERIFIED",
       category: "Vanguard",
@@ -243,7 +243,7 @@ export const ExperiencesReviewSection: React.FC = () => {
           authorTitle: rateSentiment,
           rating: rateScore,
           quote: quoteText,
-          avatarUrl: "/assets/images/avatars/avatar_12.jpg",
+          avatarUrl: "/assets/images/avatars/default_avatar.svg",
         }),
       });
     } catch (err) {
