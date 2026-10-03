@@ -46,6 +46,7 @@ import QuantumMobileExperience from "@/components/landing/quantum-mobile-experie
 import ExperiencesReviewSection from "@/components/landing/experiences-review-section";
 import { LiveProofFeedSection } from "@/components/landing/live-proof-feed-section";
 import AboutSection from "@/components/landing/about-section";
+import QuantumTypographyVideoSection from "@/components/landing/quantum-typography-video-section";
 import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
@@ -177,13 +178,9 @@ export default function LandingPage() {
       </section>
 
       {/* ============================================================
-          01.5 — ABOUT QUANTUM & ARCHITECTURE SPECIFICATION
+          01.5 — QUANTUM TYPOGRAPHY SPECIFICATION VIDEO SECTION
           ============================================================ */}
-      <section id="about" className="py-24 px-6 relative border-t border-slate-900/60 bg-transparent scroll-mt-20">
-        <div className="max-w-7xl mx-auto">
-          <AboutSection showHero={true} showCta={false} />
-        </div>
-      </section>
+      <QuantumTypographyVideoSection />
 
       {/* ============================================================
           02 — WHAT IS QUANTUM?
