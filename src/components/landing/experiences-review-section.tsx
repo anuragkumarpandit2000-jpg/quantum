@@ -45,142 +45,10 @@ const INITIAL_REVIEWS: ReviewItem[] = [
     callsign: "ARCHITECT_01",
     avatar: "/assets/images/logo/logo.png",
     stars: 5,
-    date: "DAY 90 • UNBROKEN",
+    date: "FOUNDER • UNBROKEN",
     category: "Vanguard",
     verified: true,
     text: "The real-time telemetry, 90-day matrix, and live proof feed in Quantum are second to none. Pure discipline execution.",
-  },
-  {
-    id: "rev-piyush",
-    name: "Piyush Chauhan",
-    role: "Discipline Vanguard",
-    callsign: "CHALLENGER_CC84",
-    avatar: "/assets/images/avatars/avatar_02.png",
-    stars: 5,
-    date: "02 Oct",
-    category: "Habits",
-    verified: true,
-    text: "The app helps turn my goals into something I can monitor regularly. It helps me stay connected to the goals I set for myself. I feel more motivated to maintain my routine after using it. The concept is simple, useful, and easy to understand.",
-  },
-  {
-    id: "rev-eagle-vikas",
-    name: "Eagle Vikas",
-    role: "Habit Specialist",
-    callsign: "CHALLENGER_AB26",
-    avatar: "/assets/images/avatars/avatar_03.png",
-    stars: 5,
-    date: "02 Oct",
-    category: "Physical",
-    verified: true,
-    text: "It feels genuinely helpful for building better habits. I think it can be genuinely useful for people doing a Winter Arc. It is helpful to have my transformation activities organized in one place. I like that I can use the core tracking experience without paying.",
-  },
-  {
-    id: "rev-sumit",
-    name: "Sumit Khan",
-    role: "Arc Master",
-    callsign: "CHALLENGER_DF1F",
-    avatar: "/assets/images/avatars/avatar_04.jpg",
-    stars: 5,
-    date: "02 Oct",
-    category: "Skills",
-    verified: true,
-    text: "The app is amazing for something that is available at no cost. This is a useful way to keep track of daily transformation progress. I feel more motivated to maintain my routine after using it. It is a nice way to turn motivation into consistent action.",
-  },
-  {
-    id: "rev-veer",
-    name: "Veer Saini",
-    role: "90-Day Competitor",
-    callsign: "CHALLENGER_CEB5",
-    avatar: "/assets/images/avatars/avatar_05.jpg",
-    stars: 5,
-    date: "02 Oct",
-    category: "AI",
-    verified: true,
-    text: "It has helped me become more aware of my daily consistency. The interface makes tracking a Winter Arc feel straightforward. I think it can be genuinely useful for people doing a Winter Arc. The combination of useful tracking and free access is impressive.",
-  },
-  {
-    id: "rev-rtk",
-    name: "Rtk",
-    role: "Kinetic Operator",
-    callsign: "CHALLENGER_1751",
-    avatar: "/assets/images/avatars/avatar_06.jpg",
-    stars: 5,
-    date: "02 Oct",
-    category: "Vanguard",
-    verified: true,
-    text: "The simple structure makes it easier to keep working toward improvement. The tracking makes small improvements easier to notice. The app helps turn my goals into something I can monitor regularly. The Winter Arc tracking experience feels simple and motivating.",
-  },
-  {
-    id: "rev-eagle",
-    name: "Eagle",
-    role: "Apex Sentinel",
-    callsign: "CHALLENGER_6DD9",
-    avatar: "/assets/images/avatars/avatar_07.jpg",
-    stars: 5,
-    date: "01 Oct",
-    category: "Habits",
-    verified: true,
-    text: "The concept is simple, useful, and easy to understand. Seeing my progress over time makes the journey feel more meaningful. This app makes my Winter Arc journey easier to track. It makes personal improvement feel more measurable.",
-  },
-  {
-    id: "rev-chirag",
-    name: "Chirag Thakur",
-    role: "Core Strategist",
-    callsign: "CHALLENGER_3351",
-    avatar: "/assets/images/avatars/avatar_08.jpg",
-    stars: 5,
-    date: "01 Oct",
-    category: "Physical",
-    verified: true,
-    text: "I like being able to follow my journey instead of relying only on memory. I would describe the experience as clean, helpful, and motivating. This is a useful way to keep track of daily transformation progress. It makes the challenge feel more structured and realistic.",
-  },
-  {
-    id: "rev-smt",
-    name: "Smt",
-    role: "Winter Arc Challenger",
-    callsign: "CHALLENGER_2DC5",
-    avatar: "/assets/images/avatars/avatar_09.jpg",
-    stars: 5,
-    date: "01 Oct",
-    category: "Skills",
-    verified: true,
-    text: "The app helps turn my goals into something I can monitor regularly. The simple structure makes it easier to keep working toward improvement. It is a nice way to turn motivation into consistent action. The combination of useful tracking and free access is impressive.",
-  },
-  {
-    id: "rev-priya",
-    name: "Priya Raj",
-    role: "Discipline Vanguard",
-    callsign: "CHALLENGER_F4FD",
-    avatar: "/assets/images/avatars/avatar_10.jpg",
-    stars: 5,
-    date: "01 Oct",
-    category: "AI",
-    verified: true,
-    text: "I appreciate that the main experience is free and accessible. The Winter Arc tracking experience feels simple and motivating. It makes the challenge feel more structured and realistic. It has become a useful part of my daily self-improvement routine.",
-  },
-  {
-    id: "rev-tanvi",
-    name: "Tanvi Patel",
-    role: "Core Strategist",
-    callsign: "CHALLENGER_C62C",
-    avatar: "/assets/images/avatars/avatar_02.png",
-    stars: 5,
-    date: "30 Sep",
-    category: "Habits",
-    verified: true,
-    text: "For a free app, the overall concept is surprisingly useful. The app helps turn my goals into something I can monitor regularly. The overall experience feels practical and motivating. I really like how this app organizes my transformation journey.",
-  },
-  {
-    id: "rev-sahil",
-    name: "Sahil Jha",
-    role: "Winter Arc Challenger",
-    callsign: "CHALLENGER_2BA7",
-    avatar: "/assets/images/avatars/avatar_03.png",
-    stars: 5,
-    date: "30 Sep",
-    category: "Physical",
-    verified: true,
-    text: "For a free app, the overall concept is surprisingly useful. I enjoy checking my progress and seeing how consistent I have been. It feels genuinely helpful for building better habits. It gives me a simple way to stay accountable to my own goals.",
   },
 ];
 
@@ -190,7 +58,7 @@ export const ExperiencesReviewSection: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [reviews, setReviews] = useState<ReviewItem[]>(INITIAL_REVIEWS);
-  const [totalReviewsCount, setTotalReviewsCount] = useState<number>(741);
+  const [totalReviewsCount, setTotalReviewsCount] = useState<number>(1);
   const [visibleCount, setVisibleCount] = useState<number>(12);
 
   // Modals
@@ -443,7 +311,7 @@ export const ExperiencesReviewSection: React.FC = () => {
               )}
             >
               <Star size={13} className="text-amber-400" />
-              <span>{totalReviewsCount > 0 ? `${totalReviewsCount.toLocaleString()}+ Archive & Reviews` : "Archive & Reviews"}</span>
+              <span>{totalReviewsCount > 1 ? `${totalReviewsCount} Community Reviews` : "Community Reviews"}</span>
             </button>
           </div>
         </div>
@@ -667,58 +535,40 @@ export const ExperiencesReviewSection: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-300 font-mono">
-                    {totalReviewsCount > 0 ? `${totalReviewsCount.toLocaleString()}+` : "11,000+"}
+                    {totalReviewsCount}
                   </div>
                   <span className="text-[10px] font-mono text-sky-300 bg-sky-500/20 px-2.5 py-1 rounded-full border border-sky-400/30">
-                    EXPANDED INDEX
+                    REAL EXPERIENCES
                   </span>
                 </div>
 
                 <div>
                   <h3 className="text-lg font-bold text-white group-hover:text-sky-300 transition-colors">
-                    OTHER EXPERIENCES
+                    COMMUNITY REVIEWS
                   </h3>
-                  <div className="text-xs font-mono text-slate-400">Collaborations & Reviews</div>
+                  <div className="text-xs font-mono text-slate-400">Authentic Challenger Logs</div>
                 </div>
 
-                {/* Stacked mini preview badges */}
+                {/* Stacked real category breakdown */}
                 <div className="space-y-1.5 font-mono text-[11px]">
                   <div className="flex justify-between items-center px-2 py-1 rounded bg-slate-900/60 border border-slate-800 text-slate-300">
-                    <span>Habit Protocols</span>
-                    <span className="text-sky-400 font-bold">22</span>
+                    <span>Habits Arc</span>
+                    <span className="text-sky-400 font-bold">{reviews.filter(r => r.category === "Habits").length}</span>
                   </div>
                   <div className="flex justify-between items-center px-2 py-1 rounded bg-slate-900/60 border border-slate-800 text-slate-300">
-                    <span>Physical Recomp</span>
-                    <span className="text-sky-400 font-bold">14</span>
+                    <span>Physical Arc</span>
+                    <span className="text-sky-400 font-bold">{reviews.filter(r => r.category === "Physical").length}</span>
                   </div>
                   <div className="flex justify-between items-center px-2 py-1 rounded bg-slate-900/60 border border-slate-800 text-slate-300">
-                    <span>Skill Decompositions</span>
-                    <span className="text-sky-400 font-bold">12</span>
+                    <span>Skills & AI</span>
+                    <span className="text-sky-400 font-bold">{reviews.filter(r => r.category === "Skills" || r.category === "AI" || r.category === "Vanguard").length}</span>
                   </div>
                 </div>
 
-                {/* Overlapping Avatars Cluster */}
-                <div className="flex items-center gap-2 pt-1">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3].map((num) => (
-                      <div
-                        key={num}
-                        className="relative w-7 h-7 rounded-full border border-sky-400/50 overflow-hidden aspect-square"
-                      >
-                        <Image
-                          src={`/assets/images/avatars/avatar_0${num}.${num === 1 || num === 2 || num === 3 ? "png" : "jpg"}`}
-                          alt="Challenger"
-                          fill
-                          sizes="28px"
-                          className="object-cover"
-                        />
-                      </div>
-                    ))}
-                    <div className="w-7 h-7 rounded-full bg-sky-950 border border-sky-400/40 flex items-center justify-center text-[9px] font-mono text-sky-300 font-bold">
-                      +48
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-400">Verified Challengers</span>
+                {/* Active Reviewers Status */}
+                <div className="flex items-center gap-2 pt-1 font-mono text-[11px] text-slate-400">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Real-time Verified Feedback System</span>
                 </div>
               </div>
 
