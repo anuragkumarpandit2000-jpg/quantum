@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Shield,
+  Crown,
   Zap,
   Flame,
   Trophy,
@@ -77,6 +78,8 @@ import MobileRotatingShowcase from "@/components/ui/mobile-rotating-showcase";
 import QuantumMobileExperience from "@/components/landing/quantum-mobile-experience";
 import AboutSection from "@/components/landing/about-section";
 import QuantumSupportModal from "@/components/donations/quantum-support-modal";
+import { QuantumSovereignBadge } from "@/components/ui/quantum-sovereign-badge";
+import { getUserSovereignBadges } from "@/lib/badges";
 import { cn, formatXP, calculateLevel, getActiveWinterArcDay, getTimeUntilMidnight } from "@/lib/utils";
 
 type NavTab =
@@ -924,6 +927,15 @@ export default function DashboardPage() {
   const levelInfo = calculateLevel(currentStreak);
   const { level, tier, progressPercent } = levelInfo;
 
+  const sovereignBadgesData = getUserSovereignBadges({
+    email: user?.email,
+    role: user?.role,
+    isAdmin: user?.role === "ADMIN" || user?.email?.toLowerCase() === "anuragkumar.pandit2000@gmail.com",
+    level: level,
+    streak: currentStreak,
+    totalXP: userXP,
+  });
+
   return (
     <div className="relative min-h-screen bg-[#02050f] text-slate-100 flex overflow-hidden selection:bg-sky-500 selection:text-slate-950 font-sans">
       {/* Command Center Cyberpunk Background Graphic Asset */}
@@ -975,27 +987,45 @@ export default function DashboardPage() {
           </div>
 
           {/* User Micro Profile */}
-          <div className="p-3 rounded-xl bg-black/35 backdrop-blur-xl border border-white/10 flex items-center gap-3">
-            <div className="relative w-10 h-10 rounded-full border border-sky-400/40 overflow-hidden shrink-0 shadow-sm aspect-square bg-slate-900/60 flex items-center justify-center">
-              {user?.profile?.avatar ? (
-                <Image
-                  src={user.profile.avatar}
-                  alt="Avatar"
-                  fill
-                  className="rounded-full object-cover object-center"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-sky-500/20 text-sky-400 text-sm font-bold font-mono">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : <User size={16} />}
+          <div className="p-3 rounded-xl bg-black/35 backdrop-blur-xl border border-white/10 flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <div className="relative w-10 h-10 rounded-full border border-sky-400/40 overflow-hidden shrink-0 shadow-sm aspect-square bg-slate-900/60 flex items-center justify-center">
+                {user?.profile?.avatar ? (
+                  <Image
+                    src={user.profile.avatar}
+                    alt="Avatar"
+                    fill
+                    className="rounded-full object-cover object-center"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-sky-500/20 text-sky-400 text-sm font-bold font-mono">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : <User size={16} />}
+                  </div>
+                )}
+              </div>
+              <div className="truncate flex-1">
+                <div className="font-bold text-xs text-white truncate flex items-center gap-1.5">
+                  <span className="truncate">{user?.name}</span>
+                  {(user?.role === "ADMIN" || user?.email?.toLowerCase() === "anuragkumar.pandit2000@gmail.com") && (
+                    <Sparkles size={11} className="text-amber-400 shrink-0 animate-pulse" />
+                  )}
                 </div>
-              )}
-            </div>
-            <div className="truncate">
-              <div className="font-bold text-xs text-white truncate">{user?.name}</div>
-              <div className="text-[10px] font-mono text-sky-400 truncate">
-                Lvl {level} • {tier}
+                <div className="text-[10px] font-mono text-sky-400 truncate">
+                  Lvl {level} • {tier}
+                </div>
               </div>
             </div>
+
+            {/* Sovereign Scarcity Badge Pill */}
+            {sovereignBadgesData.activeBadge && (
+              <div className="pt-1.5 border-t border-white/10 flex justify-center">
+                <QuantumSovereignBadge
+                  badgeId={sovereignBadgesData.activeBadge.id}
+                  variant="pill"
+                  className="w-full justify-center text-[9px] py-1 shadow-md"
+                />
+              </div>
+            )}
           </div>
 
           {/* Nav Items (Task, Analytics, Skills, Gallery, Competition, Profile, AI, App, About) */}
@@ -1753,10 +1783,24 @@ export default function DashboardPage() {
                         />
                       </div>
                       <div>
-                        <div className="font-bold text-sm text-white">{u.name}</div>
+                        <div className="font-bold text-sm text-white flex items-center justify-center gap-1.5">
+                          <span>{u.name}</span>
+                          {u.isAdmin && (
+                            <Sparkles size={12} className="text-amber-400 shrink-0 animate-pulse" />
+                          )}
+                        </div>
                         <div className="text-[10px] font-mono text-slate-400">
                           @{u.username}
                         </div>
+                        {u.badge && (
+                          <div className="pt-1.5 flex justify-center">
+                            <QuantumSovereignBadge
+                              badgeId={u.badge.id}
+                              variant="pill"
+                              className="text-[9px]"
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="font-mono text-xs font-bold text-sky-400">
                         {formatXP(u.profile?.totalXP || 0)} XP
@@ -1790,7 +1834,7 @@ export default function DashboardPage() {
                           )}
                         >
                           <td className="p-3.5 text-sky-400">#{i + 1}</td>
-                          <td className="p-3.5 flex items-center gap-2.5">
+                          <td className="p-3.5 flex items-center gap-2.5 flex-wrap">
                             <div className="relative w-7 h-7 rounded-full border border-sky-400/30 overflow-hidden shrink-0 aspect-square">
                               <Image
                                 src={u.profile?.avatar || "/assets/images/avatars/default_avatar.svg"}
@@ -1799,7 +1843,14 @@ export default function DashboardPage() {
                                 className="rounded-full object-cover object-center"
                               />
                             </div>
-                            <span>{u.name}</span>
+                            <span className="font-semibold text-white">{u.name}</span>
+                            {u.badge && (
+                              <QuantumSovereignBadge
+                                badgeId={u.badge.id}
+                                variant="pill"
+                                className="text-[9px] py-0.5"
+                              />
+                            )}
                             {isMe && (
                               <span className="text-[9px] bg-sky-500 text-slate-950 px-1.5 py-0.5 rounded font-bold">
                                 YOU
@@ -1972,6 +2023,73 @@ export default function DashboardPage() {
                       #{leaderboard?.currentUserRank || 1}
                     </div>
                     <div className="text-slate-400 text-[10px] mt-0.5">Of {leaderboard?.totalParticipants || 1} Challengers</div>
+                  </div>
+                </div>
+
+                {/* ============================================================
+                    SOVEREIGN SCARCITY BADGES & TIER LADDER
+                    ============================================================ */}
+                <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-950/70 via-black/80 to-slate-900/60 backdrop-blur-xl border border-white/10 space-y-6 shadow-2xl">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-400">
+                        <Crown size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-extrabold text-white tracking-wide flex items-center gap-2">
+                          <span>SOVEREIGN SCARCITY BADGES</span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                            FINITE COHORTS
+                          </span>
+                        </h3>
+                        <p className="text-xs text-slate-400 font-mono">
+                          IMMUTABLE BADGES LOCKED BY LEVEL, XP, AND FOUNDER STATUS
+                        </p>
+                      </div>
+                    </div>
+
+                    {sovereignBadgesData.activeBadge && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-slate-400">YOUR ACTIVE BADGE:</span>
+                        <QuantumSovereignBadge
+                          badgeId={sovereignBadgesData.activeBadge.id}
+                          variant="pill"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {sovereignBadgesData.allBadges.map((badge) => {
+                      const isQualified = sovereignBadgesData.unlockedBadges.some((b) => b.id === badge.id);
+                      return (
+                        <div key={badge.id} className="relative flex flex-col h-full">
+                          <QuantumSovereignBadge
+                            badgeId={badge.id as any}
+                            variant="card"
+                            isUnlocked={isQualified}
+                            className="flex-1"
+                          />
+                          {isQualified ? (
+                            <div className="mt-2 text-center py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 font-mono text-[10px] text-emerald-300 font-bold">
+                              ✓ UNLOCKED & CLAIMED
+                            </div>
+                          ) : (
+                            <div className="mt-2 text-center py-1 rounded-lg bg-slate-900/60 border border-white/5 font-mono text-[10px] text-slate-400">
+                              🔒 LOCKED ({badge.capacity === 1 ? "ADMIN ONLY" : `${badge.capacity} SLOTS TOTAL`})
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-black/40 border border-white/5 font-mono text-[11px] text-slate-400 flex items-start gap-2.5">
+                    <Sparkles size={16} className="text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="text-white font-bold">STRICT SCARCITY PROTOCOL: </span>
+                      Level 5 is permanently capped at the first 100 players, Level 9 at the first 50 players, and Level 10 at the first 10 players. The Founder & Supreme Architect badge is an immutable 1-of-1 reserved solely for Admin.
+                    </div>
                   </div>
                 </div>
 

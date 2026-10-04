@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { getUserSovereignBadges } from "@/lib/badges";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,8 @@ export async function GET(req: Request) {
           id: true,
           name: true,
           username: true,
+          email: true,
+          role: true,
           createdAt: true,
           profile: {
             select: {
@@ -75,12 +78,45 @@ export async function GET(req: Request) {
       }
     }
 
+    const mapUserWithBadge = (u: any) => {
+      const isAdmin =
+        u.role === "ADMIN" ||
+        u.email?.toLowerCase() === "anuragkumar.pandit2000@gmail.com";
+
+      const badgeInfo = getUserSovereignBadges({
+        email: u.email,
+        role: u.role,
+        isAdmin,
+        level: u.profile?.level || 1,
+        streak: u.streak?.currentStreak || 0,
+        totalXP: u.profile?.totalXP || 0,
+      });
+
+      const { email, ...sanitized } = u;
+
+      return {
+        ...sanitized,
+        isAdmin,
+        badge: badgeInfo.activeBadge
+          ? {
+              id: badgeInfo.activeBadge.id,
+              name: badgeInfo.activeBadge.name,
+              tier: badgeInfo.activeBadge.tier,
+              rarityLabel: badgeInfo.activeBadge.rarityLabel,
+              iconName: badgeInfo.activeBadge.iconName,
+            }
+          : null,
+      };
+    };
+
+    const enrichedRankedUsers = rankedUsers.map(mapUserWithBadge);
+
     return NextResponse.json({
       category,
       totalParticipants,
       currentUserRank: currentUserRank > 0 ? currentUserRank : null,
-      top3: rankedUsers.slice(0, 3),
-      leaderboard: rankedUsers.slice(0, 50),
+      top3: enrichedRankedUsers.slice(0, 3),
+      leaderboard: enrichedRankedUsers.slice(0, 50),
     });
   } catch (error) {
     console.error("GET /api/competition error:", error);

@@ -49,6 +49,7 @@ import AboutSection from "@/components/landing/about-section";
 import QuantumTypographyVideoSection from "@/components/landing/quantum-typography-video-section";
 import QuantumWelcomeVideoSection from "@/components/landing/quantum-welcome-video-section";
 import WinterArcDayCounter from "@/components/landing/winter-arc-day-counter";
+import { SovereignBadgesShowcase } from "@/components/landing/sovereign-badges-showcase";
 import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
@@ -167,7 +168,7 @@ export default function LandingPage() {
           {/* Award Badge integration with 3D tilt */}
           <div className="pt-6">
             <QuantumTiltCard maxTilt={5} liftDistance={6} className="p-3 inline-block">
-              <AwardBadge type="winter-arc-first" place={1} />
+              <AwardBadge type="winter-arc-first" place={1} link="#sovereign-badges" />
             </QuantumTiltCard>
           </div>
         </div>
@@ -312,6 +313,11 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ============================================================
+          03.5 — QUANTUM SOVEREIGN BADGES & SCARCITY HIERARCHY
+          ============================================================ */}
+      <SovereignBadgesShowcase />
 
       {/* ============================================================
           04 — TRANSFORMATION SECTION
