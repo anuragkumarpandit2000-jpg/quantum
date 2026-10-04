@@ -48,6 +48,7 @@ import { LiveProofFeedSection } from "@/components/landing/live-proof-feed-secti
 import AboutSection from "@/components/landing/about-section";
 import QuantumTypographyVideoSection from "@/components/landing/quantum-typography-video-section";
 import QuantumWelcomeVideoSection from "@/components/landing/quantum-welcome-video-section";
+import WinterArcDayCounter from "@/components/landing/winter-arc-day-counter";
 import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
@@ -380,65 +381,14 @@ export default function LandingPage() {
               </QuantumTiltCard>
             </div>
 
-            {/* RIGHT: 4.5 Rating, Challenge Webapp Headline, Winter Arc is Live, Number of Days Left */}
+            {/* RIGHT: Real-Time Winter Arc Day Counter & Protocol Status */}
             <div className="lg:col-span-7 w-full flex flex-col justify-center">
               <QuantumTiltCard
                 maxTilt={4}
                 liftDistance={6}
                 className="p-6 sm:p-8 space-y-6 border-sky-500/30 shadow-[0_0_40px_rgba(56,189,248,0.15)] flex flex-col justify-between"
               >
-                {/* 1. 5-Star Rating (4.5 Yellow) & Webapp Headline */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4].map((i) => (
-                        <Star
-                          key={i}
-                          className="w-6 h-6 sm:w-7 sm:h-7 fill-amber-400 text-amber-400 filter drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]"
-                        />
-                      ))}
-                      {/* 5th Star: Exactly 50% yellow (4.5 rating) */}
-                      <div className="relative w-6 h-6 sm:w-7 sm:h-7">
-                        <svg
-                          className="w-full h-full filter drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]"
-                          viewBox="0 0 24 24"
-                        >
-                          <defs>
-                            <linearGradient id="halfStarGradRating">
-                              <stop offset="50%" stopColor="#fbbf24" />
-                              <stop offset="50%" stopColor="#334155" />
-                            </linearGradient>
-                          </defs>
-                          <path
-                            fill="url(#halfStarGradRating)"
-                            stroke="#fbbf24"
-                            strokeWidth="1.5"
-                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-
-                    <div className="flex items-baseline gap-1.5 font-mono">
-                      <span className="text-2xl sm:text-3xl font-extrabold text-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.5)]">
-                        4.5
-                      </span>
-                      <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                        / 5.0 RATED PROTOCOL
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Headline specified by user */}
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight leading-snug">
-                    4.5 rating webapp that helps you top conquere the chaleenges
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans font-normal">
-                    Quantum delivers the uncompromising discipline framework to eliminate distractions, execute your daily habit matrix, and turn 90 days into permanent mental and physical dominance.
-                  </p>
-                </div>
-
-                {/* 2. Winter Arc is Live Indicator Banner */}
+                {/* 1. Winter Arc is Live Indicator Banner */}
                 <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 via-sky-950/30 to-slate-900/60 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.12)] flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2.5">
                     <span className="relative flex h-3 w-3">
@@ -454,36 +404,10 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* 3. Number of Days Left Module */}
-                <div className="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-3 font-mono">
-                  <div className="flex items-center justify-between text-xs flex-wrap gap-1">
-                    <span className="text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                      <Flame size={14} className="text-sky-400" />
-                      NUMBER OF DAYS LEFT:
-                    </span>
-                    <span className="text-sky-300 font-extrabold text-sm sm:text-base">
-                      73 DAYS REMAINING
-                    </span>
-                  </div>
+                {/* 2. Real-Time Winter Arc Day Counter */}
+                <WinterArcDayCounter />
 
-                  {/* Progress Bar */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-[10px] text-slate-400">
-                      <span>DAY 17 OF 90</span>
-                      <span className="text-emerald-400 font-bold">18.8% COMPLETED</span>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-slate-950 border border-slate-800 overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 rounded-full w-[18.8%] shadow-[0_0_12px_rgba(56,189,248,0.7)]" />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800/80">
-                    <span>90-DAY PROTOCOL • 2,160 HOURS</span>
-                    <span className="text-amber-300 font-bold">RESET BUFFER: ZERO</span>
-                  </div>
-                </div>
-
-                {/* Direct Action Link */}
+                {/* 3. Direct Action Link */}
                 <div className="pt-1 flex items-center gap-3">
                   <Link href="/signup" className="w-full">
                     <LiquidButton size="lg" className="w-full shadow-xl">
