@@ -79,8 +79,26 @@ export async function POST(req: Request) {
     });
 
     return response;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Login error:", error);
-    return NextResponse.json({ error: "Authentication failed." }, { status: 500 });
+    const msg = error?.message || "";
+    if (
+      msg.includes("Can't reach database server") ||
+      msg.includes("ECONNRESET") ||
+      msg.includes("ETIMEDOUT") ||
+      error?.code === "P1001"
+    ) {
+      return NextResponse.json(
+        {
+          error: "Database unreachable (Port 5432 blocked). If Proton VPN is active, please disconnect or pause it to allow connection to the cloud database.",
+          isConnectionIssue: true,
+        },
+        { status: 503 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Authentication failed. Please verify your credentials or network." },
+      { status: 500 }
+    );
   }
 }
