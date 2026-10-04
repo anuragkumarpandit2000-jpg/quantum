@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import {
   Shield,
@@ -17,10 +17,13 @@ import {
   CheckCircle2,
   X,
   Layers,
-  ChevronRight,
-  Activity,
-  Award,
+  Copy,
+  QrCode,
+  Heart,
+  TrendingUp,
+  MessageSquare,
 } from "lucide-react";
+import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 import QuantumTiltCard from "@/components/ui/quantum-tilt-card";
 
@@ -35,46 +38,67 @@ export interface ReviewItem {
   category: "Habits" | "Physical" | "Skills" | "AI" | "Vanguard";
   verified: boolean;
   text: string;
+  isDonation?: boolean;
+  donationAmount?: number | null;
+  donationCurrency?: string;
 }
 
+// Initial Admin Baseline: Exactly 1 vote from Admin (Anurag Pandit) with 5.0 stars
 const INITIAL_REVIEWS: ReviewItem[] = [
   {
     id: "rev-anurag",
-    name: "Anurag P.",
-    role: "Lead Architect",
+    name: "Anurag Pandit",
+    role: "Lead Architect (Admin)",
     callsign: "ARCHITECT_01",
     avatar: "/assets/images/logo/logo.png",
     stars: 5,
-    date: "FOUNDER • UNBROKEN",
+    date: "ADMIN • FOUNDER VERIFIED",
     category: "Vanguard",
     verified: true,
     text: "The real-time telemetry, 90-day matrix, and live proof feed in Quantum are second to none. Pure discipline execution.",
+    isDonation: false,
+    donationAmount: null,
+    donationCurrency: "INR",
   },
 ];
 
 export const ExperiencesReviewSection: React.FC = () => {
-  // Navigation State: 'chain' (State 1) | 'cards' (State 2) | 'archive' (State 3)
-  const [viewState, setViewState] = useState<"chain" | "cards" | "archive">("archive");
+  // Navigation State
+  const [viewState, setViewState] = useState<"archive" | "cards" | "chain">("archive");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [reviews, setReviews] = useState<ReviewItem[]>(INITIAL_REVIEWS);
-  const [totalReviewsCount, setTotalReviewsCount] = useState<number>(1);
   const [visibleCount, setVisibleCount] = useState<number>(12);
 
-  // Modals
-  const [isAddReviewOpen, setIsAddReviewOpen] = useState(false);
-  const [isRateModalOpen, setIsRateModalOpen] = useState(false);
-  const [rateStep, setRateStep] = useState<1 | 2>(1);
-  const [rateScore, setRateScore] = useState<number>(5);
-  const [rateSentiment, setRateSentiment] = useState<string>("Unbroken Discipline");
-  const [rateText, setRateText] = useState<string>("");
+  // Live Star Rating & Votes Telemetry
+  // Defaults to 1 Vote with 5.0 Stars (Admin)
+  const [totalVotes, setTotalVotes] = useState<number>(1);
+  const [averageRating, setAverageRating] = useState<number>(5.0);
+  const [userVotedRating, setUserVotedRating] = useState<number | null>(null);
+  const [isVotingSubmitting, setIsVotingSubmitting] = useState<boolean>(false);
 
-  // Add Review Form State
-  const [newAuthor, setNewAuthor] = useState("");
-  const [newRole, setNewRole] = useState("");
-  const [newRating, setNewRating] = useState(5);
-  const [newCategory, setNewCategory] = useState<"Habits" | "Physical" | "Skills" | "AI" | "Vanguard">("Habits");
-  const [newComment, setNewComment] = useState("");
+  // Modals
+  const [isAddFeedbackOpen, setIsAddFeedbackOpen] = useState(false);
+  const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
+  const [isQuickVoteModalOpen, setIsQuickVoteModalOpen] = useState(false);
+
+  // Feedback Composer Form State
+  const [authorName, setAuthorName] = useState("");
+  const [authorRole, setAuthorRole] = useState("");
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [feedbackCategory, setFeedbackCategory] = useState<
+    "Habits" | "Physical" | "Skills" | "AI" | "Vanguard"
+  >("Habits");
+  const [feedbackQuote, setFeedbackQuote] = useState("");
+  const [isDonationSupporter, setIsDonationSupporter] = useState(false);
+  const [donationAmount, setDonationAmount] = useState<string>("500");
+
+  // Donate Modal State
+  const [donateName, setDonateName] = useState("");
+  const [donateTitle, setDonateTitle] = useState("Quantum Royal Patron");
+  const [donateAmount, setDonateAmount] = useState("500");
+  const [donateMessage, setDonateMessage] = useState("");
+  const [copiedUPI, setCopiedUPI] = useState(false);
 
   // Toast feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -84,47 +108,27 @@ export const ExperiencesReviewSection: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Filtered Reviews
-  const filteredReviews = useMemo(() => {
-    return reviews.filter((r) => {
-      const matchesCat =
-        selectedCategory === "all" ||
-        (selectedCategory === "Habits" && r.category === "Habits") ||
-        (selectedCategory === "Physical" && r.category === "Physical") ||
-        (selectedCategory === "Skills" && r.category === "Skills") ||
-        (selectedCategory === "AI" && r.category === "AI") ||
-        (selectedCategory === "Vanguard" && r.category === "Vanguard");
+  const handleCopyUPI = () => {
+    navigator.clipboard.writeText("anuragkumar.pandit2000@okicici");
+    setCopiedUPI(true);
+    showToast("UPI ID copied to clipboard: anuragkumar.pandit2000@okicici");
+    setTimeout(() => setCopiedUPI(false), 2500);
+  };
 
-      const q = searchQuery.toLowerCase().trim();
-      const matchesSearch =
-        !q ||
-        r.name.toLowerCase().includes(q) ||
-        r.role.toLowerCase().includes(q) ||
-        r.text.toLowerCase().includes(q) ||
-        r.callsign.toLowerCase().includes(q);
-
-      return matchesCat && matchesSearch;
-    });
-  }, [reviews, selectedCategory, searchQuery]);
-
-  // Fetch live reviews from PostgreSQL database on mount
-  React.useEffect(() => {
+  // Fetch live reviews and computed aggregates on mount
+  const fetchLiveReviews = () => {
     fetch("/api/reviews?limit=250")
       .then((res) => res.json())
       .then((data) => {
-        if (data.total) {
-          setTotalReviewsCount(data.total);
-        }
         if (data.reviews && Array.isArray(data.reviews) && data.reviews.length > 0) {
           const dbItems: ReviewItem[] = data.reviews.map((r: any, idx: number) => {
             const textLower = (r.quote || "").toLowerCase();
             let category: "Habits" | "Physical" | "Skills" | "AI" | "Vanguard" = "Habits";
             if (
               textLower.includes("physical") ||
-              textLower.includes("calisthenics") ||
               textLower.includes("workout") ||
+              textLower.includes("calisthenics") ||
               textLower.includes("mass") ||
-              textLower.includes("body") ||
               idx % 5 === 1
             ) {
               category = "Physical";
@@ -132,7 +136,6 @@ export const ExperiencesReviewSection: React.FC = () => {
               textLower.includes("skill") ||
               textLower.includes("focus") ||
               textLower.includes("coding") ||
-              textLower.includes("task") ||
               idx % 5 === 2
             ) {
               category = "Skills";
@@ -140,7 +143,6 @@ export const ExperiencesReviewSection: React.FC = () => {
               textLower.includes("ai") ||
               textLower.includes("coaching") ||
               textLower.includes("quantum core") ||
-              textLower.includes("interface") ||
               idx % 5 === 3
             ) {
               category = "AI";
@@ -155,137 +157,304 @@ export const ExperiencesReviewSection: React.FC = () => {
             return {
               id: r.id,
               name: r.authorName || "Verified Challenger",
-              role: r.authorTitle || "Arc Challenger",
-              callsign: `CHALLENGER_${r.id.substring(0, 4).toUpperCase()}`,
+              role: r.authorTitle || (r.isDonation ? "Royal Patron" : "Arc Challenger"),
+              callsign: r.isDonation
+                ? `PATRON_${r.id.substring(0, 4).toUpperCase()}`
+                : `CHALLENGER_${r.id.substring(0, 4).toUpperCase()}`,
               avatar: r.avatarUrl || "/assets/images/avatars/default_avatar.svg",
               stars: r.rating || 5,
-              date: r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "VERIFIED ENTRY",
+              date: r.createdAt
+                ? new Date(r.createdAt).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                  })
+                : "VERIFIED ENTRY",
               category,
               verified: true,
               text: r.quote,
+              isDonation: Boolean(r.isDonation || (r.donationAmount && r.donationAmount > 0)),
+              donationAmount: r.donationAmount ? Number(r.donationAmount) : null,
+              donationCurrency: r.donationCurrency || "INR",
             };
           });
+
           setReviews(dbItems);
+          setTotalVotes(data.totalVotes || dbItems.length);
+          setAverageRating(
+            typeof data.averageRating === "number"
+              ? data.averageRating
+              : Number(
+                  (dbItems.reduce((acc, it) => acc + it.stars, 0) / dbItems.length).toFixed(1)
+                )
+          );
+        } else {
+          // Default to 1 vote from admin
+          setTotalVotes(1);
+          setAverageRating(5.0);
         }
       })
       .catch((err) => console.error("Failed to load live reviews:", err));
+  };
+
+  useEffect(() => {
+    fetchLiveReviews();
   }, []);
 
-  const handleAddReviewSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAuthor || !newComment) return;
+  // Filtered Reviews
+  const filteredReviews = useMemo(() => {
+    return reviews.filter((r) => {
+      let matchesCat = true;
+      if (selectedCategory === "patrons") {
+        matchesCat = Boolean(r.isDonation);
+      } else if (selectedCategory !== "all") {
+        matchesCat = r.category === selectedCategory;
+      }
 
-    const tempId = `rev-${Date.now()}`;
-    const newRev: ReviewItem = {
-      id: tempId,
-      name: newAuthor,
-      role: newRole || "Challenger",
-      callsign: `CHALLENGER_${Math.floor(Math.random() * 90 + 10)}`,
-      avatar: "/assets/images/avatars/default_avatar.svg",
-      stars: newRating,
-      date: `DAY ${Math.floor(Math.random() * 30 + 1)} • NEW ENTRY`,
-      category: newCategory,
-      verified: true,
-      text: newComment,
-    };
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        r.name.toLowerCase().includes(q) ||
+        r.role.toLowerCase().includes(q) ||
+        r.text.toLowerCase().includes(q) ||
+        r.callsign.toLowerCase().includes(q);
 
-    setReviews([newRev, ...reviews]);
-    setIsAddReviewOpen(false);
-    setNewAuthor("");
-    setNewRole("");
-    setNewComment("");
-    showToast("Review submitted to live Quantum Archive!");
+      return matchesCat && matchesSearch;
+    });
+  }, [reviews, selectedCategory, searchQuery]);
+
+  // Count of donation backers
+  const patronsCount = useMemo(() => {
+    return reviews.filter((r) => r.isDonation).length;
+  }, [reviews]);
+
+  // Instant Quick Vote (1 to 5 Stars)
+  const handleQuickVote = async (stars: number) => {
+    if (isVotingSubmitting) return;
+    setIsVotingSubmitting(true);
+    setUserVotedRating(stars);
+
+    // Optimistic Calculation
+    const newVotes = totalVotes + 1;
+    const currentSum = averageRating * totalVotes;
+    const newAverage = Number(((currentSum + stars) / newVotes).toFixed(1));
+
+    setTotalVotes(newVotes);
+    setAverageRating(newAverage);
+
+    // Confetti celebration
+    try {
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.8 },
+        colors: ["#38bdf8", "#fbbf24", "#34d399"],
+      });
+    } catch {}
+
+    showToast(`✓ Your ${stars}★ vote has been recorded live! Total votes: ${newVotes}`);
 
     try {
-      await fetch("/api/reviews", {
+      const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          authorName: newAuthor,
-          authorTitle: newRole || "Challenger",
-          rating: newRating,
-          quote: newComment,
-          avatarUrl: "/assets/images/avatars/default_avatar.svg",
+          authorName: "Verified Voter",
+          authorTitle: "Challenger Vote",
+          rating: stars,
+          quote: `Rated ${stars} Stars in the Quantum Winter Arc. Unbroken daily focus.`,
         }),
       });
+      const data = await res.json();
+      if (data.totalVotes && data.averageRating) {
+        setTotalVotes(data.totalVotes);
+        setAverageRating(data.averageRating);
+      }
+      fetchLiveReviews();
     } catch (err) {
-      console.error("Live review sync error:", err);
+      console.error("Vote sync error:", err);
+    } finally {
+      setIsVotingSubmitting(false);
     }
   };
 
-  const handleRateSubmit = async () => {
-    const quoteText = rateText || `Rated ${rateScore} Stars — Exceptional 90-day transformation experience in the Quantum Winter Arc.`;
-    const newRev: ReviewItem = {
+  // Submit Feedback (Regular or with Donation Support)
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authorName.trim() || !feedbackQuote.trim()) return;
+
+    const parsedDonation = isDonationSupporter ? parseFloat(donationAmount) || 500 : null;
+
+    const tempItem: ReviewItem = {
       id: `rev-${Date.now()}`,
-      name: "Verified Challenger",
-      role: rateSentiment,
-      callsign: `RATED_${rateScore}.0`,
+      name: authorName.trim(),
+      role: authorRole.trim() || (isDonationSupporter ? "Quantum Royal Patron" : "Arc Challenger"),
+      callsign: isDonationSupporter
+        ? `PATRON_${Math.floor(Math.random() * 900 + 100)}`
+        : `CHALLENGER_${Math.floor(Math.random() * 900 + 100)}`,
       avatar: "/assets/images/avatars/default_avatar.svg",
-      stars: rateScore,
+      stars: feedbackRating,
       date: "JUST NOW • VERIFIED",
-      category: "Vanguard",
+      category: feedbackCategory,
       verified: true,
-      text: quoteText,
+      text: feedbackQuote.trim(),
+      isDonation: isDonationSupporter,
+      donationAmount: parsedDonation,
+      donationCurrency: "INR",
     };
 
-    setReviews([newRev, ...reviews]);
-    setIsRateModalOpen(false);
-    setRateStep(1);
-    setRateText("");
-    showToast("Collaborative score saved to live database!");
+    // Optimistic update
+    setReviews([tempItem, ...reviews]);
+    const newVotes = totalVotes + 1;
+    const newAvg = Number(
+      ((averageRating * totalVotes + feedbackRating) / newVotes).toFixed(1)
+    );
+    setTotalVotes(newVotes);
+    setAverageRating(newAvg);
+
+    setIsAddFeedbackOpen(false);
+    setAuthorName("");
+    setAuthorRole("");
+    setFeedbackQuote("");
+    setIsDonationSupporter(false);
+
+    try {
+      confetti({
+        particleCount: isDonationSupporter ? 100 : 40,
+        spread: 70,
+        origin: { y: 0.7 },
+        colors: isDonationSupporter ? ["#fbbf24", "#f59e0b", "#38bdf8"] : ["#38bdf8", "#34d399"],
+      });
+    } catch {}
+
+    showToast(
+      isDonationSupporter
+        ? "👑 Royal Patron Feedback added with Special Premium Card!"
+        : "Feedback submitted to live Quantum Archive!"
+    );
 
     try {
       await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          authorName: "Verified Challenger",
-          authorTitle: rateSentiment,
-          rating: rateScore,
-          quote: quoteText,
-          avatarUrl: "/assets/images/avatars/default_avatar.svg",
+          authorName: tempItem.name,
+          authorTitle: tempItem.role,
+          rating: feedbackRating,
+          quote: tempItem.text,
+          donationAmount: parsedDonation,
+          donationCurrency: "INR",
+          isDonation: isDonationSupporter,
         }),
       });
+      fetchLiveReviews();
     } catch (err) {
-      console.error("Live rating sync error:", err);
+      console.error("Live feedback sync error:", err);
+    }
+  };
+
+  // Submit Dedicated Patron Donation Feedback
+  const handleDonateFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!donateName.trim() || !donateMessage.trim()) return;
+
+    const parsedDonation = parseFloat(donateAmount) || 500;
+
+    const tempItem: ReviewItem = {
+      id: `patron-${Date.now()}`,
+      name: donateName.trim(),
+      role: donateTitle.trim() || "Quantum Royal Patron",
+      callsign: `PATRON_${Math.floor(Math.random() * 900 + 100)}`,
+      avatar: "/assets/images/avatars/default_avatar.svg",
+      stars: 5,
+      date: "JUST NOW • ROYAL PATRON",
+      category: "Vanguard",
+      verified: true,
+      text: donateMessage.trim(),
+      isDonation: true,
+      donationAmount: parsedDonation,
+      donationCurrency: "INR",
+    };
+
+    setReviews([tempItem, ...reviews]);
+    const newVotes = totalVotes + 1;
+    const newAvg = Number(((averageRating * totalVotes + 5) / newVotes).toFixed(1));
+    setTotalVotes(newVotes);
+    setAverageRating(newAvg);
+
+    setIsDonateModalOpen(false);
+    setDonateName("");
+    setDonateMessage("");
+
+    try {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ["#fbbf24", "#f59e0b", "#38bdf8", "#ffffff"],
+      });
+    } catch {}
+
+    showToast(`👑 Thank you! Special Royal Patron card created with ₹${parsedDonation} support!`);
+
+    try {
+      await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          authorName: tempItem.name,
+          authorTitle: tempItem.role,
+          rating: 5,
+          quote: tempItem.text,
+          donationAmount: parsedDonation,
+          donationCurrency: "INR",
+          isDonation: true,
+        }),
+      });
+      fetchLiveReviews();
+    } catch (err) {
+      console.error("Donation feedback sync error:", err);
     }
   };
 
   return (
-    <section id="reviews" className="py-24 px-4 sm:px-6 relative border-t border-slate-900 bg-transparent text-slate-100 overflow-hidden">
-      {/* Background Micro-Grid & Soft Radial Lighting */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(56,189,248,0.07),transparent_70%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(2,132,199,0.05),transparent_60%)] pointer-events-none" />
+    <section
+      id="reviews"
+      className="py-24 px-4 sm:px-6 relative border-t border-slate-900 bg-transparent text-slate-100 overflow-hidden"
+    >
+      {/* Background Radial Ambient Lighting */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(56,189,248,0.08),transparent_70%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(251,191,36,0.05),transparent_60%)] pointer-events-none" />
 
       <div className="relative max-w-6xl mx-auto space-y-12">
         {/* ====================================================================
             HEADER
             ==================================================================== */}
         <div className="text-center space-y-3 max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300 font-mono text-[11px] tracking-widest uppercase">
-            <Sparkles size={12} className="text-sky-400" />
-            <span>05 — EXPERIENCES & REVIEWS</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300 font-mono text-[11px] tracking-widest uppercase shadow-[0_0_20px_rgba(56,189,248,0.2)]">
+            <Sparkles size={12} className="text-sky-400 animate-pulse" />
+            <span>05 — COMMUNITY TELEMETRY & FEEDBACK</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
+          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white font-sans">
             CHALLENGER EXPERIENCES
           </h2>
           <p className="text-slate-400 text-sm leading-relaxed font-sans">
-            Interactive repository of real 90-day execution logs, architectural capabilities, and verified reviews from the Quantum Vanguard.
+            Real 90-day transformation logs, live community star voting, and verified feedback from
+            challengers and supporters across the globe.
           </p>
 
-          {/* Interactive State Toggle Pills */}
+          {/* View Mode Switcher */}
           <div className="pt-2 flex items-center justify-center gap-2 font-mono text-xs">
             <button
-              onClick={() => setViewState("chain")}
+              onClick={() => setViewState("archive")}
               className={cn(
-                "px-3 py-1.5 rounded-full border transition flex items-center gap-1.5",
-                viewState === "chain"
+                "px-3.5 py-1.5 rounded-full border transition flex items-center gap-1.5",
+                viewState === "archive"
                   ? "bg-sky-500/20 border-sky-400 text-sky-300 shadow-[0_0_15px_rgba(56,189,248,0.3)] font-bold"
                   : "bg-slate-950/80 border-slate-800 text-slate-400 hover:text-white"
               )}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-              <span>3-Node Chain</span>
+              <Star size={13} className="text-amber-400 fill-amber-400" />
+              <span>Live Star Ratings & Feedback</span>
             </button>
 
             <button
@@ -298,359 +467,338 @@ export const ExperiencesReviewSection: React.FC = () => {
               )}
             >
               <Layers size={13} className="text-sky-400" />
-              <span>4-Cards Grid</span>
+              <span>4 Core Pillars</span>
             </button>
 
             <button
-              onClick={() => setViewState("archive")}
+              onClick={() => setViewState("chain")}
               className={cn(
                 "px-3 py-1.5 rounded-full border transition flex items-center gap-1.5",
-                viewState === "archive"
+                viewState === "chain"
                   ? "bg-sky-500/20 border-sky-400 text-sky-300 shadow-[0_0_15px_rgba(56,189,248,0.3)] font-bold"
                   : "bg-slate-950/80 border-slate-800 text-slate-400 hover:text-white"
               )}
             >
-              <Star size={13} className="text-amber-400" />
-              <span>{totalReviewsCount > 1 ? `${totalReviewsCount} Community Reviews` : "Community Reviews"}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+              <span>3-Node Architecture</span>
             </button>
           </div>
         </div>
 
         {/* ====================================================================
-            STATE 1: INITIAL CONNECTED CHAIN (3 Circular Badges + SVG Beam)
+            LIVE STAR RATING & VOTING CONSOLE (ALWAYS PROMINENT)
+            ==================================================================== */}
+        <div className="relative rounded-3xl p-6 sm:p-8 bg-slate-950/90 border border-sky-500/30 backdrop-blur-2xl shadow-[0_0_50px_rgba(56,189,248,0.12)]">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+            {/* Left: Star Score & Dynamic Votes Display */}
+            <div className="md:col-span-6 space-y-4 border-b md:border-b-0 md:border-r border-slate-800/80 pb-6 md:pb-0 md:pr-8">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+                <span className="text-[11px] font-mono tracking-widest text-amber-300 uppercase font-semibold">
+                  LIVE COMMUNITY SCORE
+                </span>
+                <span className="text-slate-600">•</span>
+                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-500/30">
+                  REAL-TIME CALCULATION
+                </span>
+              </div>
+
+              {/* Big Star Score + Stars */}
+              <div className="flex items-baseline gap-4 flex-wrap">
+                <div className="text-5xl sm:text-6xl font-black font-mono tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-200 to-sky-300">
+                  {averageRating.toFixed(1)}
+                </div>
+                <div className="space-y-1">
+                  {/* Visual 5 Stars filled according to average rating */}
+                  <div className="flex items-center text-amber-400 text-2xl drop-shadow-[0_0_12px_rgba(251,191,36,0.65)]">
+                    {[1, 2, 3, 4, 5].map((starIdx) => {
+                      const fillPercentage = Math.max(
+                        0,
+                        Math.min(100, (averageRating - (starIdx - 1)) * 100)
+                      );
+                      return (
+                        <div key={starIdx} className="relative inline-block mr-1">
+                          <span className="text-slate-800">★</span>
+                          <span
+                            className="absolute top-0 left-0 overflow-hidden text-amber-400"
+                            style={{ width: `${fillPercentage}%` }}
+                          >
+                            ★
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="text-xs font-mono text-slate-400">
+                    Out of 5.0 Global Rating
+                  </div>
+                </div>
+              </div>
+
+              {/* Dynamic Votes Count Display */}
+              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-4 font-mono">
+                <div className="flex items-center gap-2.5">
+                  <Shield size={16} className="text-sky-400 shrink-0" />
+                  <div>
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>Total Votes:</span>
+                      <span className="text-sky-300 px-2 py-0.5 rounded bg-sky-500/20 border border-sky-400/40 font-mono font-extrabold text-sm">
+                        {totalVotes.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-slate-400">
+                      {totalVotes === 1
+                        ? "1 Vote (Admin Verified Baseline)"
+                        : `${totalVotes} verified community votes recorded`}
+                    </div>
+                  </div>
+                </div>
+
+                {patronsCount > 0 && (
+                  <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-amber-300 bg-amber-950/40 px-2.5 py-1 rounded-lg border border-amber-500/30">
+                    <span>👑 {patronsCount} Patrons</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Instant 1-Click Interactive Star Voting */}
+            <div className="md:col-span-6 space-y-4">
+              <div className="space-y-1">
+                <div className="text-xs font-mono uppercase tracking-wider text-sky-400 font-bold flex items-center gap-2">
+                  <TrendingUp size={14} />
+                  <span>VOTE LIVE • CLICK TO RATE</span>
+                </div>
+                <p className="text-xs text-slate-400 font-sans">
+                  Tap any star below to instantly register your live rating and update the overall
+                  Quantum score.
+                </p>
+              </div>
+
+              {/* 5 Big Clickable Star Buttons */}
+              <div className="flex items-center justify-between gap-2 p-3 rounded-2xl bg-slate-900/60 border border-slate-800">
+                {[1, 2, 3, 4, 5].map((starVal) => (
+                  <button
+                    key={starVal}
+                    type="button"
+                    onClick={() => handleQuickVote(starVal)}
+                    disabled={isVotingSubmitting}
+                    className={cn(
+                      "flex-1 py-2.5 rounded-xl border font-mono transition-all duration-200 flex flex-col items-center justify-center gap-1 group/btn",
+                      userVotedRating === starVal
+                        ? "bg-amber-400/25 border-amber-400 text-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.4)] scale-105"
+                        : "bg-slate-950/80 border-slate-800 text-slate-400 hover:border-amber-400/60 hover:text-amber-300 hover:scale-105"
+                    )}
+                    title={`Rate ${starVal} Stars`}
+                  >
+                    <Star
+                      size={20}
+                      className={cn(
+                        "transition-transform group-hover/btn:scale-110",
+                        userVotedRating && userVotedRating >= starVal
+                          ? "fill-amber-400 text-amber-400"
+                          : "text-slate-600 group-hover/btn:text-amber-400"
+                      )}
+                    />
+                    <span className="text-[10px] font-bold">{starVal}★</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Quick Action Sub-buttons */}
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <button
+                  onClick={() => setIsAddFeedbackOpen(true)}
+                  className="flex-1 py-2 px-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-mono font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-[0_0_15px_rgba(56,189,248,0.3)]"
+                >
+                  <Plus size={14} />
+                  <span>+ Leave Written Feedback</span>
+                </button>
+
+                <button
+                  onClick={() => setIsDonateModalOpen(true)}
+                  className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-mono font-extrabold text-xs flex items-center justify-center gap-1.5 transition shadow-[0_0_25px_rgba(251,191,36,0.4)] group"
+                >
+                  <span className="text-sm">👑</span>
+                  <span>Donate & Get Royal Card</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ====================================================================
+            STATE 1: 3-NODE CHAIN (When viewState === "chain")
             ==================================================================== */}
         {viewState === "chain" && (
-          <div className="py-10 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500">
+          <div className="py-6 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500">
             <QuantumTiltCard
               maxTilt={4}
               liftDistance={6}
-              onClick={() => setViewState("cards")}
+              onClick={() => setViewState("archive")}
               className="relative w-full max-w-3xl flex items-center justify-center py-12 px-6 cursor-pointer group shadow-2xl transition-all duration-300"
               role="button"
               tabIndex={0}
-              title="Click or Hover to Expand 4-Card Overview"
+              title="Click to view full feedback archive"
             >
-              {/* SVG Connecting Beams & Photon Traces */}
-              <svg
-                className="absolute top-1/2 left-0 w-full h-32 -translate-y-1/2 pointer-events-none z-0 overflow-visible"
-                viewBox="0 0 700 120"
-                preserveAspectRatio="none"
-              >
-                <defs>
-                  <linearGradient id="quantumLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
-                    <stop offset="50%" stopColor="#ffffff" stopOpacity="1" />
-                    <stop offset="100%" stopColor="#0284c7" stopOpacity="0.9" />
-                  </linearGradient>
-                </defs>
-                {/* Dashed background trace */}
-                <path
-                  d="M 120 60 C 220 45, 260 75, 350 60 C 440 45, 480 75, 580 60"
-                  fill="none"
-                  stroke="rgba(56, 189, 248, 0.2)"
-                  strokeWidth="2"
-                  strokeDasharray="6 6"
-                />
-                {/* Glowing traveling beam */}
-                <path
-                  d="M 120 60 C 220 45, 260 75, 350 60 C 440 45, 480 75, 580 60"
-                  fill="none"
-                  stroke="url(#quantumLineGradient)"
-                  strokeWidth="3"
-                  strokeDasharray="160"
-                  strokeDashoffset="160"
-                  className="animate-pulse"
-                  style={{
-                    filter: "drop-shadow(0 0 8px rgba(56, 189, 248, 0.8))",
-                  }}
-                />
-              </svg>
-
-              {/* 3 Circular Connected Nodes */}
-              <div className="relative z-10 flex items-center justify-between w-full max-w-xl px-4 sm:px-8">
-                {/* Node 1 */}
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-950 border-2 border-sky-400/40 group-hover:border-sky-400 group-hover:scale-105 flex items-center justify-center text-sky-400 shadow-[0_0_25px_rgba(56,189,248,0.25)] transition-all duration-300">
-                    <Zap size={32} />
+              <div className="flex flex-col sm:flex-row items-center justify-around w-full gap-8 z-10 font-mono text-center">
+                <div className="space-y-2 flex flex-col items-center">
+                  <div className="w-14 h-14 rounded-2xl bg-sky-500/10 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.25)]">
+                    <Zap size={24} />
                   </div>
-                  <span className="font-mono text-xs text-slate-300 font-bold tracking-wider uppercase text-center">
-                    01 • Habit Matrix
-                  </span>
+                  <div className="text-xs font-bold text-white">90-Day Habits</div>
+                  <div className="text-[10px] text-slate-400">Zero Checkbox Drift</div>
                 </div>
 
-                {/* Node 2 */}
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-950 border-2 border-cyan-400/40 group-hover:border-cyan-300 group-hover:scale-105 flex items-center justify-center text-cyan-300 shadow-[0_0_25px_rgba(34,211,238,0.25)] transition-all duration-300">
-                    <Brain size={32} />
+                <div className="space-y-2 flex flex-col items-center">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.25)]">
+                    <Star size={24} className="fill-amber-400 text-amber-400" />
                   </div>
-                  <span className="font-mono text-xs text-slate-300 font-bold tracking-wider uppercase text-center">
-                    02 • Quantum Core
-                  </span>
+                  <div className="text-xs font-bold text-white">Live Star Rating</div>
+                  <div className="text-[10px] text-amber-300">{averageRating.toFixed(1)} ★ ({totalVotes} Votes)</div>
                 </div>
 
-                {/* Node 3 */}
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-950 border-2 border-blue-400/40 group-hover:border-blue-400 group-hover:scale-105 flex items-center justify-center text-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.25)] transition-all duration-300">
-                    <Flame size={32} />
+                <div className="space-y-2 flex flex-col items-center">
+                  <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-400/40 flex items-center justify-center text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.25)]">
+                    <Brain size={24} />
                   </div>
-                  <span className="font-mono text-xs text-slate-300 font-bold tracking-wider uppercase text-center">
-                    03 • Winter Arc Apex
-                  </span>
+                  <div className="text-xs font-bold text-white">Core AI & Proof</div>
+                  <div className="text-[10px] text-slate-400">Verified Execution</div>
                 </div>
               </div>
-            </QuantumTiltCard>
 
-            {/* Click to expand hint */}
-            <div className="mt-4 flex items-center gap-2 font-mono text-xs text-sky-300/80">
-              <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
-              <span>CLICK TO EXPAND 4-CARD OVERVIEW</span>
-            </div>
+              <div className="absolute bottom-3 text-[10px] font-mono text-sky-400 flex items-center gap-1 group-hover:underline">
+                <span>Click to view live feedback & royal cards</span>
+                <ArrowRight size={12} />
+              </div>
+            </QuantumTiltCard>
           </div>
         )}
 
         {/* ====================================================================
-            STATE 2: EXPANDED 4-CARD SYSTEM
+            STATE 2: 4-CARDS GRID (When viewState === "cards")
             ==================================================================== */}
         {viewState === "cards" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Card 1: Habit Matrix */}
-            <QuantumTiltCard className="p-6 flex flex-col justify-between space-y-5 group">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-400/30 flex items-center justify-center text-sky-400 group-hover:scale-110 transition">
-                    <Zap size={22} />
-                  </div>
-                  <span className="text-[10px] font-mono text-sky-400 bg-sky-950/40 px-2.5 py-1 rounded-full border border-sky-500/20">
-                    PROTOCOL CORE
-                  </span>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-bold text-white group-hover:text-sky-300 transition-colors">
-                    90-Day Habit Matrix
-                  </h3>
-                  <div className="text-xs font-mono text-slate-400">Continuous Discipline Grid</div>
-                </div>
-
-                <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                  Unbroken horizontal matrix from Day 01 through Day 90. Single-click checkmarks, instant streak verification, zero checkboxes lost across devices.
-                </p>
-
-                <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 font-mono text-[11px] text-slate-300 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>98.4% Consistency • Instant Sync</span>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in duration-500">
+            <QuantumTiltCard className="p-6 space-y-4">
+              <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-400/30 flex items-center justify-center text-sky-400">
+                <Zap size={20} />
               </div>
-
-              <div
-                onClick={() => setViewState("archive")}
-                className="pt-3 border-t border-slate-900 flex items-center justify-between text-xs font-mono text-sky-400 group-hover:text-sky-300 cursor-pointer"
-              >
-                <span>View Experiences</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </div>
+              <h3 className="text-base font-bold text-white">90-Day Habit Matrix</h3>
+              <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                Day 01 to Day 90 horizontal matrix with double-click audit controls.
+              </p>
             </QuantumTiltCard>
 
-            {/* Card 2: Quantum Core AI */}
-            <QuantumTiltCard className="p-6 flex flex-col justify-between space-y-5 group">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition">
-                    <Brain size={22} />
-                  </div>
-                  <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/40 px-2.5 py-1 rounded-full border border-cyan-500/20">
-                    COGNITIVE ENGINE
-                  </span>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-bold text-white group-hover:text-cyan-300 transition-colors">
-                    Quantum Core AI
-                  </h3>
-                  <div className="text-xs font-mono text-slate-400">Autonomous Coaching Layer</div>
-                </div>
-
-                <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                  Context-grounded intelligence. Decomposes large goals into micro-tasks, diagnoses consistency dips, and triggers real-time motivational interventions.
-                </p>
-
-                <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 font-mono text-[11px] text-slate-300 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                  <span>Real-time VAD • 0.0 Vanity Tolerance</span>
-                </div>
+            <QuantumTiltCard className="p-6 space-y-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+                <Flame size={20} />
               </div>
-
-              <div
-                onClick={() => setViewState("archive")}
-                className="pt-3 border-t border-slate-900 flex items-center justify-between text-xs font-mono text-cyan-400 group-hover:text-cyan-300 cursor-pointer"
-              >
-                <span>View Experiences</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </div>
+              <h3 className="text-base font-bold text-white">Physical Recomp</h3>
+              <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                Progressive overload and lean mass hypertrophy protocols.
+              </p>
             </QuantumTiltCard>
 
-            {/* Card 3: Winter Arc Apex */}
-            <QuantumTiltCard className="p-6 flex flex-col justify-between space-y-5 group">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-400/30 flex items-center justify-center text-blue-400 group-hover:scale-110 transition">
-                    <Flame size={22} />
-                  </div>
-                  <span className="text-[10px] font-mono text-blue-400 bg-blue-950/40 px-2.5 py-1 rounded-full border border-blue-500/20">
-                    PHYSICAL RECOMP
-                  </span>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-bold text-white group-hover:text-blue-300 transition-colors">
-                    Physical Recomposition
-                  </h3>
-                  <div className="text-xs font-mono text-slate-400">90-Day Athletic Apex</div>
-                </div>
-
-                <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                  Rigorous calisthenics, progressive overload, and caloric discipline producing lean hypertrophy and mental toughness across 2,160 hours.
-                </p>
-
-                <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 font-mono text-[11px] text-slate-300 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                  <span>+13.3 KG Lean Mass • 90/90 Days</span>
-                </div>
+            <QuantumTiltCard className="p-6 space-y-4">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+                <Brain size={20} />
               </div>
-
-              <div
-                onClick={() => setViewState("archive")}
-                className="pt-3 border-t border-slate-900 flex items-center justify-between text-xs font-mono text-blue-400 group-hover:text-blue-300 cursor-pointer"
-              >
-                <span>View Experiences</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </div>
+              <h3 className="text-base font-bold text-white">Quantum Core AI</h3>
+              <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                Autonomous task breakdown, study blueprints, and cognitive pacing.
+              </p>
             </QuantumTiltCard>
 
-            {/* Card 4: 50+ OTHER EXPERIENCES (Exploratory Gateway Card!) */}
             <QuantumTiltCard
               onClick={() => setViewState("archive")}
-              className="p-6 flex flex-col justify-between space-y-5 cursor-pointer relative overflow-hidden group"
+              className="p-6 space-y-4 cursor-pointer border-amber-400/40 bg-amber-950/20 hover:border-amber-400"
             >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-300 font-mono">
-                    {totalReviewsCount}
-                  </div>
-                  <span className="text-[10px] font-mono text-sky-300 bg-sky-500/20 px-2.5 py-1 rounded-full border border-sky-400/30">
-                    REAL EXPERIENCES
-                  </span>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-bold text-white group-hover:text-sky-300 transition-colors">
-                    COMMUNITY REVIEWS
-                  </h3>
-                  <div className="text-xs font-mono text-slate-400">Authentic Challenger Logs</div>
-                </div>
-
-                {/* Stacked real category breakdown */}
-                <div className="space-y-1.5 font-mono text-[11px]">
-                  <div className="flex justify-between items-center px-2 py-1 rounded bg-slate-900/60 border border-slate-800 text-slate-300">
-                    <span>Habits Arc</span>
-                    <span className="text-sky-400 font-bold">{reviews.filter(r => r.category === "Habits").length}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-2 py-1 rounded bg-slate-900/60 border border-slate-800 text-slate-300">
-                    <span>Physical Arc</span>
-                    <span className="text-sky-400 font-bold">{reviews.filter(r => r.category === "Physical").length}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-2 py-1 rounded bg-slate-900/60 border border-slate-800 text-slate-300">
-                    <span>Skills & AI</span>
-                    <span className="text-sky-400 font-bold">{reviews.filter(r => r.category === "Skills" || r.category === "AI" || r.category === "Vanguard").length}</span>
-                  </div>
-                </div>
-
-                {/* Active Reviewers Status */}
-                <div className="flex items-center gap-2 pt-1 font-mono text-[11px] text-slate-400">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Real-time Verified Feedback System</span>
-                </div>
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
+                <Star size={20} className="fill-amber-400 text-amber-400" />
               </div>
-
-              {/* Distinct Exploratory Button */}
-              <button className="w-full py-2.5 px-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs font-mono flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(56,189,248,0.4)] group-hover:scale-102 transition-all">
-                <span>Explore Archive & Reviews</span>
-                <ArrowRight size={14} />
-              </button>
+              <h3 className="text-base font-bold text-white">Live Feedback Archive</h3>
+              <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                {reviews.length} authentic challenger reviews & verified Royal Patron cards.
+              </p>
+              <div className="text-xs font-mono text-amber-300 flex items-center gap-1">
+                <span>Open Archive</span>
+                <ArrowRight size={12} />
+              </div>
             </QuantumTiltCard>
           </div>
         )}
 
         {/* ====================================================================
-            STATE 3: FULL REVIEWS & EXPERIENCE ARCHIVE FEED
+            STATE 3 / DEFAULT: LIVE REVIEWS & EXPERIENCE ARCHIVE FEED
             ==================================================================== */}
         {viewState === "archive" && (
           <div className="space-y-8 animate-in fade-in duration-500">
-            {/* Top Navigation Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-900 pb-5">
-              <button
-                onClick={() => setViewState("cards")}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-sky-400/40 text-slate-300 hover:text-white font-mono text-xs transition"
-              >
-                <ArrowLeft size={14} />
-                <span>Back to 4 Cards</span>
-              </button>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setIsAddReviewOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-mono text-xs font-bold transition shadow-md"
-                >
-                  <Plus size={14} />
-                  <span>+ Add New Review</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setRateStep(1);
-                    setIsRateModalOpen(true);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-950 border border-amber-400/40 hover:border-amber-400 text-amber-300 font-mono text-xs font-bold transition"
-                >
-                  <Star size={14} className="fill-amber-400 text-amber-400" />
-                  <span>★ Start / Rate</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Filter & Live Search Controls */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            {/* Filter & Live Search Bar */}
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-b border-slate-900 pb-5">
               {/* Category Filter Pills */}
               <div className="flex flex-wrap gap-2 font-mono text-xs">
                 {[
-                  { id: "all", label: "All", count: reviews.length },
-                  { id: "Habits", label: "Habits", count: reviews.filter((r) => r.category === "Habits").length },
-                  { id: "Physical", label: "Physical Arc", count: reviews.filter((r) => r.category === "Physical").length },
-                  { id: "Skills", label: "Skills", count: reviews.filter((r) => r.category === "Skills").length },
-                  { id: "AI", label: "Quantum AI", count: reviews.filter((r) => r.category === "AI").length },
-                  { id: "Vanguard", label: "Vanguard", count: reviews.filter((r) => r.category === "Vanguard").length },
+                  { id: "all", label: "All Feedback", count: reviews.length },
+                  {
+                    id: "patrons",
+                    label: "👑 Royal Patrons",
+                    count: patronsCount,
+                    highlight: true,
+                  },
+                  {
+                    id: "Habits",
+                    label: "Habits",
+                    count: reviews.filter((r) => r.category === "Habits").length,
+                  },
+                  {
+                    id: "Physical",
+                    label: "Physical",
+                    count: reviews.filter((r) => r.category === "Physical").length,
+                  },
+                  {
+                    id: "Skills",
+                    label: "Skills",
+                    count: reviews.filter((r) => r.category === "Skills").length,
+                  },
+                  {
+                    id: "AI",
+                    label: "AI Core",
+                    count: reviews.filter((r) => r.category === "AI").length,
+                  },
+                  {
+                    id: "Vanguard",
+                    label: "Vanguard",
+                    count: reviews.filter((r) => r.category === "Vanguard").length,
+                  },
                 ].map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
                     className={cn(
-                      "px-3 py-1.5 rounded-lg border transition text-xs",
+                      "px-3 py-1.5 rounded-lg border transition text-xs flex items-center gap-1.5",
                       selectedCategory === cat.id
-                        ? "bg-sky-500/20 border-sky-400 text-sky-300 font-bold shadow-sm"
+                        ? cat.highlight
+                          ? "bg-amber-400/20 border-amber-400 text-amber-300 font-bold shadow-[0_0_12px_rgba(251,191,36,0.3)]"
+                          : "bg-sky-500/20 border-sky-400 text-sky-300 font-bold shadow-sm"
                         : "bg-slate-950/80 border-slate-800 text-slate-400 hover:text-slate-200"
                     )}
                   >
-                    {cat.label} ({cat.count})
+                    <span>{cat.label}</span>
+                    <span className="text-[10px] opacity-75">({cat.count})</span>
                   </button>
                 ))}
               </div>
 
               {/* Search input */}
               <div className="relative min-w-[240px]">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                />
                 <input
                   type="text"
-                  placeholder="Search experiences..."
+                  placeholder="Search reviews & patrons..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-sky-400"
@@ -658,57 +806,155 @@ export const ExperiencesReviewSection: React.FC = () => {
               </div>
             </div>
 
-            {/* Dynamic Reviews Feed */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredReviews.slice(0, visibleCount).map((r) => (
-                <QuantumTiltCard
-                  key={r.id}
-                  className="p-6 flex flex-col justify-between space-y-4 group"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex text-amber-400 text-xs tracking-widest">
-                        {"★".repeat(r.stars)}
-                        {"☆".repeat(5 - r.stars)}
+            {/* Dynamic Feedback Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredReviews.slice(0, visibleCount).map((r) => {
+                // SPECIAL PREMIUM CARD FOR DONATIONS / MONEY SUPPORTERS
+                if (r.isDonation || (r.donationAmount && r.donationAmount > 0)) {
+                  return (
+                    <QuantumTiltCard
+                      key={r.id}
+                      maxTilt={6}
+                      liftDistance={8}
+                      className={cn(
+                        "p-6 sm:p-7 flex flex-col justify-between space-y-4 group relative overflow-hidden",
+                        "rounded-2xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-950/50 via-slate-950/95 to-amber-900/30",
+                        "shadow-[0_0_40px_rgba(251,191,36,0.22)] hover:border-amber-400 hover:shadow-[0_0_50px_rgba(251,191,36,0.35)]",
+                        "transition-all duration-300"
+                      )}
+                    >
+                      {/* Holographic animated glow orb */}
+                      <div className="absolute top-0 right-0 -mr-12 -mt-12 w-36 h-36 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
+
+                      <div className="space-y-3.5 relative z-10">
+                        {/* Top Royal Patron Banner */}
+                        <div className="flex items-center justify-between gap-2 border-b border-amber-400/30 pb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-400/20 border border-amber-400/50 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.4)]">
+                              👑
+                            </span>
+                            <div>
+                              <div className="text-[11px] font-mono font-bold tracking-wider text-amber-300 uppercase flex items-center gap-1">
+                                <span>QUANTUM ROYAL PATRON</span>
+                                <Sparkles size={11} className="text-amber-400 animate-pulse" />
+                              </div>
+                              <div className="text-[9px] font-mono text-amber-200/70">
+                                SPECIAL SUPPORTER BACKED
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Donation Amount Pill */}
+                          <div className="px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/30 to-amber-600/30 border border-amber-400/60 text-amber-200 font-mono text-[11px] font-extrabold tracking-wide shadow-[0_0_15px_rgba(251,191,36,0.3)] flex items-center gap-1 shrink-0">
+                            <span>₹{r.donationAmount?.toLocaleString() || "500"}</span>
+                            <span className="text-[9px] text-amber-400 font-normal">DONATED</span>
+                          </div>
+                        </div>
+
+                        {/* Stars in Gold Shimmer */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex text-amber-400 text-sm tracking-widest drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]">
+                            {"★".repeat(r.stars)}
+                            {"☆".repeat(5 - r.stars)}
+                          </div>
+                          <span className="text-[10px] font-mono text-amber-300 bg-amber-950/70 px-2 py-0.5 rounded border border-amber-500/30">
+                            {r.date}
+                          </span>
+                        </div>
+
+                        {/* Quote in Emphasized Typography */}
+                        <p className="text-xs text-amber-100/90 leading-relaxed font-sans italic font-medium">
+                          &ldquo;{r.text}&rdquo;
+                        </p>
                       </div>
-                      <span className="text-[10px] font-mono text-sky-400 bg-sky-950/40 px-2 py-0.5 rounded border border-sky-500/20">
-                        {r.date}
-                      </span>
+
+                      {/* Supporter Footer */}
+                      <div className="pt-3 border-t border-amber-400/25 flex items-center justify-between relative z-10">
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-10 h-10 rounded-full border-2 border-amber-400/70 overflow-hidden shrink-0 shadow-[0_0_15px_rgba(251,191,36,0.35)]">
+                            <Image
+                              src={r.avatar}
+                              alt={r.name}
+                              fill
+                              sizes="40px"
+                              className="object-cover object-center"
+                            />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors flex items-center gap-1.5">
+                              <span>{r.name}</span>
+                              <CheckCircle2
+                                size={13}
+                                className="text-amber-400 fill-amber-400/20"
+                              />
+                            </div>
+                            <div className="text-[10px] font-mono text-amber-200/80">{r.role}</div>
+                            <div className="text-[9px] font-mono text-amber-400/90">{r.callsign}</div>
+                          </div>
+                        </div>
+
+                        <div className="text-[9px] font-mono text-amber-300 border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 rounded">
+                          IMMUTABLE PROOF
+                        </div>
+                      </div>
+                    </QuantumTiltCard>
+                  );
+                }
+
+                // REGULAR CHALLENGER REVIEW CARD
+                return (
+                  <QuantumTiltCard
+                    key={r.id}
+                    className="p-6 flex flex-col justify-between space-y-4 group bg-slate-950/80 border-slate-800/80 hover:border-sky-400/50"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex text-amber-400 text-xs tracking-widest">
+                          {"★".repeat(r.stars)}
+                          {"☆".repeat(5 - r.stars)}
+                        </div>
+                        <span className="text-[10px] font-mono text-sky-400 bg-sky-950/40 px-2 py-0.5 rounded border border-sky-500/20">
+                          {r.date}
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-slate-300 leading-relaxed font-sans italic">
+                        &ldquo;{r.text}&rdquo;
+                      </p>
                     </div>
 
-                    <p className="text-xs text-slate-300 leading-relaxed font-sans italic">
-                      &ldquo;{r.text}&rdquo;
-                    </p>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-900 flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-full border border-sky-400/40 overflow-hidden shrink-0 aspect-square shadow-sm">
-                      <Image
-                        src={r.avatar}
-                        alt={r.name}
-                        fill
-                        sizes="40px"
-                        className="object-cover object-center"
-                      />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-white group-hover:text-sky-300 transition-colors flex items-center gap-1.5">
-                        <span>{r.name}</span>
-                        {r.verified && <CheckCircle2 size={12} className="text-emerald-400" />}
+                    <div className="pt-4 border-t border-slate-900 flex items-center gap-3">
+                      <div className="relative w-10 h-10 rounded-full border border-sky-400/40 overflow-hidden shrink-0 aspect-square shadow-sm">
+                        <Image
+                          src={r.avatar}
+                          alt={r.name}
+                          fill
+                          sizes="40px"
+                          className="object-cover object-center"
+                        />
                       </div>
-                      <div className="text-[10px] font-mono text-slate-500">{r.role}</div>
-                      <div className="text-[9px] font-mono text-sky-400/80">{r.callsign}</div>
+                      <div>
+                        <div className="text-xs font-bold text-white group-hover:text-sky-300 transition-colors flex items-center gap-1.5">
+                          <span>{r.name}</span>
+                          {r.verified && (
+                            <CheckCircle2 size={12} className="text-emerald-400" />
+                          )}
+                        </div>
+                        <div className="text-[10px] font-mono text-slate-500">{r.role}</div>
+                        <div className="text-[9px] font-mono text-sky-400/80">{r.callsign}</div>
+                      </div>
                     </div>
-                  </div>
-                </QuantumTiltCard>
-              ))}
+                  </QuantumTiltCard>
+                );
+              })}
             </div>
 
             {/* Pagination / Load More */}
             {visibleCount < filteredReviews.length && (
               <div className="flex flex-col items-center justify-center gap-2 pt-4">
                 <span className="text-xs font-mono text-slate-500">
-                  Displaying {Math.min(visibleCount, filteredReviews.length)} of {totalReviewsCount ? totalReviewsCount.toLocaleString() : filteredReviews.length} experiences
+                  Displaying {Math.min(visibleCount, filteredReviews.length)} of{" "}
+                  {filteredReviews.length} experiences
                 </span>
                 <button
                   onClick={() => setVisibleCount((prev) => prev + 6)}
@@ -723,61 +969,64 @@ export const ExperiencesReviewSection: React.FC = () => {
       </div>
 
       {/* ====================================================================
-          MODAL 1: ADD NEW REVIEW COMPOSER
+          MODAL 1: ADD NEW FEEDBACK / REVIEW COMPOSER
           ==================================================================== */}
-      {isAddReviewOpen && (
+      {isAddFeedbackOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg p-6 sm:p-8 rounded-3xl bg-slate-950 border border-sky-400/40 shadow-[0_0_50px_rgba(56,189,248,0.2)] text-left font-mono space-y-5">
+          <div className="relative w-full max-w-lg p-6 sm:p-8 rounded-3xl bg-slate-950 border border-sky-400/40 shadow-[0_0_50px_rgba(56,189,248,0.2)] text-left font-mono space-y-5 max-h-[90vh] overflow-y-auto">
             <button
-              onClick={() => setIsAddReviewOpen(false)}
+              onClick={() => setIsAddFeedbackOpen(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-white p-1"
             >
               <X size={18} />
             </button>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-white">Add New Challenger Review</h3>
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <MessageSquare size={18} className="text-sky-400" />
+                <span>Submit Challenger Feedback</span>
+              </h3>
               <p className="text-xs text-slate-400 font-sans">
-                Document your 90-day progress, habits matrix feedback, or coaching audit.
+                Document your 90-day progress, habits matrix review, or protocol reflection.
               </p>
             </div>
 
-            <form onSubmit={handleAddReviewSubmit} className="space-y-4">
+            <form onSubmit={handleFeedbackSubmit} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-xs text-slate-300">YOUR NAME / CALLSIGN</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Arjun K."
-                  value={newAuthor}
-                  onChange={(e) => setNewAuthor(e.target.value)}
+                  placeholder="e.g. Rahul Sharma"
+                  value={authorName}
+                  onChange={(e) => setAuthorName(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-sky-400"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-slate-300">ROLE / PROTOCOL SQUAD</label>
+                <label className="text-xs text-slate-300">ROLE / CALLSIGN TITLE</label>
                 <input
                   type="text"
                   placeholder="e.g. Student & Calisthenics Athlete"
-                  value={newRole}
-                  onChange={(e) => setNewRole(e.target.value)}
+                  value={authorRole}
+                  onChange={(e) => setAuthorRole(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-sky-400"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-slate-300">RATING (STARS)</label>
+                <label className="text-xs text-slate-300">STAR RATING</label>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <button
                       key={s}
                       type="button"
-                      onClick={() => setNewRating(s)}
+                      onClick={() => setFeedbackRating(s)}
                       className={cn(
                         "flex-1 py-1.5 rounded-lg border text-xs transition",
-                        newRating >= s
-                          ? "bg-amber-400/20 border-amber-400 text-amber-300"
+                        feedbackRating >= s
+                          ? "bg-amber-400/20 border-amber-400 text-amber-300 font-bold"
                           : "bg-slate-900 border-slate-800 text-slate-500"
                       )}
                     >
@@ -790,8 +1039,8 @@ export const ExperiencesReviewSection: React.FC = () => {
               <div className="space-y-1">
                 <label className="text-xs text-slate-300">CATEGORY</label>
                 <select
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value as any)}
+                  value={feedbackCategory}
+                  onChange={(e) => setFeedbackCategory(e.target.value as any)}
                   className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-sky-400"
                 >
                   <option value="Habits">Habits Matrix</option>
@@ -803,22 +1052,82 @@ export const ExperiencesReviewSection: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-slate-300">YOUR EXPERIENCE</label>
+                <label className="text-xs text-slate-300">YOUR FEEDBACK / REVIEW</label>
                 <textarea
                   required
                   rows={3}
                   placeholder="Detail your consistency rate, XP compounding, or transformation milestones..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
+                  value={feedbackQuote}
+                  onChange={(e) => setFeedbackQuote(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-sky-400 font-sans"
                 />
               </div>
 
+              {/* SPECIAL DONATION / PATRON UPGRADE TOGGLE */}
+              <div className="p-3.5 rounded-xl border border-amber-400/40 bg-amber-950/20 space-y-3">
+                <label className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isDonationSupporter}
+                    onChange={(e) => setIsDonationSupporter(e.target.checked)}
+                    className="w-4 h-4 rounded text-amber-500 accent-amber-400"
+                  />
+                  <div className="text-xs text-amber-300 font-bold flex items-center gap-1.5">
+                    <span>👑 Support with a Contribution (Get Special Royal Card)</span>
+                  </div>
+                </label>
+
+                {isDonationSupporter && (
+                  <div className="space-y-3 pt-2 border-t border-amber-400/20 text-xs animate-in fade-in duration-200">
+                    <p className="text-[11px] text-amber-200/80 font-sans">
+                      Your feedback will be showcased in the exclusive golden Royal Patron card.
+                    </p>
+
+                    <div className="flex gap-2">
+                      {["100", "250", "500", "1000"].map((amt) => (
+                        <button
+                          key={amt}
+                          type="button"
+                          onClick={() => setDonationAmount(amt)}
+                          className={cn(
+                            "flex-1 py-1 rounded-lg border text-xs font-mono transition",
+                            donationAmount === amt
+                              ? "bg-amber-400 text-slate-950 font-bold border-amber-400"
+                              : "bg-slate-900 text-amber-300 border-amber-400/40"
+                          )}
+                        >
+                          ₹{amt}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-amber-500/30 text-[11px]">
+                      <span className="text-slate-400 font-mono">UPI: anuragkumar.pandit2000@okicici</span>
+                      <button
+                        type="button"
+                        onClick={handleCopyUPI}
+                        className="text-amber-300 hover:text-white flex items-center gap-1 text-[10px]"
+                      >
+                        {copiedUPI ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                        <span>{copiedUPI ? "COPIED" : "COPY"}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition shadow-md"
+                className={cn(
+                  "w-full py-2.5 rounded-xl font-bold text-xs transition shadow-md",
+                  isDonationSupporter
+                    ? "bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 text-slate-950 shadow-[0_0_20px_rgba(251,191,36,0.4)]"
+                    : "bg-sky-500 hover:bg-sky-400 text-slate-950"
+                )}
               >
-                SUBMIT REVIEW TO LIVE ARCHIVE
+                {isDonationSupporter
+                  ? "SUBMIT AS ROYAL PATRON (SPECIAL CARD)"
+                  : "SUBMIT FEEDBACK TO LIVE ARCHIVE"}
               </button>
             </form>
           </div>
@@ -826,122 +1135,118 @@ export const ExperiencesReviewSection: React.FC = () => {
       )}
 
       {/* ====================================================================
-          MODAL 2: START / RATE 2-STEP GUIDED FLOW
+          MODAL 2: DEDICATED DONATE & GET ROYAL PATRON CARD
           ==================================================================== */}
-      {isRateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md p-6 sm:p-8 rounded-3xl bg-slate-950 border border-amber-400/40 shadow-[0_0_50px_rgba(251,191,36,0.2)] text-left font-mono space-y-6">
+      {isDonateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md p-6 sm:p-8 rounded-3xl bg-slate-950 border-2 border-amber-400/60 shadow-[0_0_60px_rgba(251,191,36,0.3)] text-left font-mono space-y-5 max-h-[90vh] overflow-y-auto">
             <button
-              onClick={() => setIsRateModalOpen(false)}
+              onClick={() => setIsDonateModalOpen(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-white p-1"
             >
               <X size={18} />
             </button>
 
-            {rateStep === 1 ? (
-              <div className="space-y-5 text-center">
-                <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-white">Rate Your Quantum Arc</h3>
-                  <p className="text-xs text-slate-400 font-sans">
-                    Select your overall execution score for the protocol.
-                  </p>
-                </div>
+            <div className="space-y-1 text-center">
+              <div className="inline-flex p-3 rounded-2xl bg-amber-400/20 border border-amber-400/50 text-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.4)] mb-2">
+                <span className="text-2xl">👑</span>
+              </div>
+              <h3 className="text-xl font-extrabold text-white">Quantum Royal Patron</h3>
+              <p className="text-xs text-amber-200/80 font-sans">
+                Support the project and have your feedback permanently immortalized in the Special
+                Royal Card.
+              </p>
+            </div>
 
-                {/* Big Interactive Stars */}
-                <div className="flex justify-center gap-3 py-4">
-                  {[1, 2, 3, 4, 5].map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setRateScore(val)}
-                      className={cn(
-                        "p-2 rounded-xl transition-all duration-200",
-                        rateScore >= val
-                          ? "text-amber-400 scale-110 drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]"
-                          : "text-slate-700 hover:text-slate-500"
-                      )}
-                    >
-                      <Star size={32} className={rateScore >= val ? "fill-amber-400" : ""} />
-                    </button>
-                  ))}
-                </div>
-
-                <div className="text-xs font-mono text-amber-300 bg-amber-950/30 border border-amber-500/20 py-1.5 px-3 rounded-full inline-block">
-                  {rateScore === 5 && "5.0 / 5.0 (Exceptional Discipline)"}
-                  {rateScore === 4 && "4.0 / 5.0 (Strong Arc Progress)"}
-                  {rateScore === 3 && "3.0 / 5.0 (Baseline Execution)"}
-                  {rateScore <= 2 && "Needs Optimization"}
-                </div>
-
+            {/* Scannable UPI QR Box */}
+            <div className="p-4 rounded-2xl bg-slate-900 border border-amber-400/40 flex flex-col items-center gap-3">
+              <div className="relative w-36 h-36 bg-white p-2 rounded-xl overflow-hidden shadow-lg">
+                <Image
+                  src="/assets/images/qr_support.jpg"
+                  alt="Quantum Support QR Code"
+                  fill
+                  sizes="150px"
+                  className="object-contain"
+                />
+              </div>
+              <div className="text-center space-y-1">
+                <div className="text-[11px] text-white font-bold">SCAN WITH ANY UPI APP</div>
                 <button
                   type="button"
-                  onClick={() => setRateStep(2)}
-                  className="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition"
+                  onClick={handleCopyUPI}
+                  className="px-3 py-1 rounded-full bg-slate-950 border border-amber-400/40 text-[10px] text-amber-300 hover:text-white flex items-center gap-1.5 mx-auto"
                 >
-                  CONTINUE TO STEP 2 →
+                  <span>anuragkumar.pandit2000@okicici</span>
+                  {copiedUPI ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
                 </button>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-white">How was your transformation?</h3>
-                  <p className="text-xs text-slate-400 font-sans">
-                    Select a core sentiment tag and leave a short reflection.
-                  </p>
-                </div>
+            </div>
 
-                {/* Sentiment Tags */}
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    "Unbroken Discipline",
-                    "Relentless Focus",
-                    "Cognitive Rigor",
-                    "Flawless UI",
-                  ].map((tag) => (
+            {/* Donation Feedback Form */}
+            <form onSubmit={handleDonateFeedbackSubmit} className="space-y-3.5">
+              <div className="space-y-1">
+                <label className="text-xs text-amber-300">SELECT CONTRIBUTION AMOUNT</label>
+                <div className="flex gap-2">
+                  {["100", "250", "500", "1000"].map((amt) => (
                     <button
-                      key={tag}
+                      key={amt}
                       type="button"
-                      onClick={() => setRateSentiment(tag)}
+                      onClick={() => setDonateAmount(amt)}
                       className={cn(
-                        "px-3 py-1 rounded-full border text-[11px] transition",
-                        rateSentiment === tag
-                          ? "bg-amber-400/20 border-amber-400 text-amber-300 font-bold"
-                          : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                        "flex-1 py-1.5 rounded-lg border text-xs font-mono font-bold transition",
+                        donateAmount === amt
+                          ? "bg-amber-400 text-slate-950 border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.4)]"
+                          : "bg-slate-900 text-amber-300 border-slate-800 hover:border-amber-400/40"
                       )}
                     >
-                      {tag}
+                      ₹{amt}
                     </button>
                   ))}
                 </div>
-
-                <div className="space-y-1">
-                  <textarea
-                    rows={3}
-                    placeholder="In a few sentences, how did Quantum impact your daily habits or focus?"
-                    value={rateText}
-                    onChange={(e) => setRateText(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-amber-400 font-sans"
-                  />
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRateStep(1)}
-                    className="flex-1 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs transition"
-                  >
-                    ← BACK
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleRateSubmit}
-                    className="flex-2 py-2.5 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition"
-                  >
-                    SUBMIT RATING
-                  </button>
-                </div>
               </div>
-            )}
+
+              <div className="space-y-1">
+                <label className="text-xs text-slate-300">YOUR NAME / CALLSIGN</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Vikramaditya"
+                  value={donateName}
+                  onChange={(e) => setDonateName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-slate-300">PATRON TITLE</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Founding Patron • Calisthenics Squad"
+                  value={donateTitle}
+                  onChange={(e) => setDonateTitle(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-slate-300">YOUR SUPPORTER MESSAGE / REVIEW</label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="Leave your immortal words for the Quantum Vanguard..."
+                  value={donateMessage}
+                  onChange={(e) => setDonateMessage(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-amber-400 font-sans"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:from-amber-300 hover:to-amber-200 text-slate-950 font-extrabold text-xs transition shadow-[0_0_30px_rgba(251,191,36,0.5)]"
+              >
+                PUBLISH SPECIAL ROYAL PATRON CARD 👑
+              </button>
+            </form>
           </div>
         </div>
       )}

@@ -227,6 +227,9 @@ model Feedback {
   avatarUrl        String?
   isSample         Boolean           @default(false)
   isApproved       Boolean           @default(true)
+  donationAmount   Float?
+  donationCurrency String?           @default("INR")
+  isDonation       Boolean           @default(false)
   createdAt        DateTime          @default(now())
 }
 
