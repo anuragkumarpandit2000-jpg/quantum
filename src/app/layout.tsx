@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AudioProvider } from "@/components/audio/audio-provider";
-import { AudioController } from "@/components/audio/audio-controller";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 
 export const metadata: Metadata = {
@@ -47,7 +46,6 @@ export default function RootLayout({
         <ThemeProvider>
           <AudioProvider>
             {children}
-            <AudioController />
           </AudioProvider>
         </ThemeProvider>
       </body>

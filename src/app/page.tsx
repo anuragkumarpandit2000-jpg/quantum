@@ -47,6 +47,7 @@ import ExperiencesReviewSection from "@/components/landing/experiences-review-se
 import { LiveProofFeedSection } from "@/components/landing/live-proof-feed-section";
 import AboutSection from "@/components/landing/about-section";
 import QuantumTypographyVideoSection from "@/components/landing/quantum-typography-video-section";
+import QuantumWelcomeVideoSection from "@/components/landing/quantum-welcome-video-section";
 import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
@@ -232,6 +233,11 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ============================================================
+          02.5 — WELCOME TO QUANTUM: THE TRANSFORMATION ENGINE VIDEO
+          ============================================================ */}
+      <QuantumWelcomeVideoSection />
 
       {/* ============================================================
           03 — WINTER ARC

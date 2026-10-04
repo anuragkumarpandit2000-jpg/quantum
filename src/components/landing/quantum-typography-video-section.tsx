@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, ArrowRight, Shield, Volume2, VolumeX } from "lucide-react";
+import { Sparkles, ArrowRight, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface QuantumTypographyVideoSectionProps {
@@ -17,82 +17,29 @@ export const QuantumTypographyVideoSection: React.FC<QuantumTypographyVideoSecti
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const sectionRef = useRef<HTMLDivElement | null>(null);
 
-  const [isVideoLoaded, setIsVideoLoaded] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [isCtaHovered, setIsCtaHovered] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [audioNeedsInteraction, setAudioNeedsInteraction] = useState(false);
 
-  // Instant Autoplay and Browser Audio Strategy
+  // Seamless Autoplay via IntersectionObserver (muted native visual)
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Check if video is already ready in browser cache
-    if (video.readyState >= 2) {
-      setIsVideoLoaded(true);
-    }
+    video.muted = true;
 
-    video.volume = 1.0;
-
-    const startPlayback = async () => {
-      // 1. Try unmuted playback first
+    const playVideo = async () => {
       try {
-        video.muted = false;
         await video.play();
-        setIsPlaying(true);
-        setIsMuted(false);
-        setAudioNeedsInteraction(false);
       } catch {
-        // 2. Fallback to muted playback instantly without stalling
-        try {
-          video.muted = true;
-          setIsMuted(true);
-          setAudioNeedsInteraction(true);
-          await video.play();
-          setIsPlaying(true);
-        } catch {
-          // Playback deferred by browser
-        }
+        // Deferred by browser
       }
     };
 
-    // Auto-unmute on very first user gesture anywhere on page
-    const handleFirstGesture = () => {
-      if (video) {
-        video.muted = false;
-        video.volume = 1.0;
-        video
-          .play()
-          .then(() => {
-            setIsMuted(false);
-            setAudioNeedsInteraction(false);
-          })
-          .catch(() => {});
-      }
-      cleanupListeners();
-    };
-
-    const cleanupListeners = () => {
-      window.removeEventListener("click", handleFirstGesture);
-      window.removeEventListener("touchstart", handleFirstGesture);
-      window.removeEventListener("keydown", handleFirstGesture);
-      window.removeEventListener("scroll", handleFirstGesture);
-    };
-
-    window.addEventListener("click", handleFirstGesture, { once: true, passive: true });
-    window.addEventListener("touchstart", handleFirstGesture, { once: true, passive: true });
-    window.addEventListener("keydown", handleFirstGesture, { once: true, passive: true });
-    window.addEventListener("scroll", handleFirstGesture, { once: true, passive: true });
-
-    // IntersectionObserver to auto-play when visible & pause when scrolled away
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          startPlayback();
+          playVideo();
         } else {
           video.pause();
-          setIsPlaying(false);
         }
       },
       {
@@ -105,31 +52,12 @@ export const QuantumTypographyVideoSection: React.FC<QuantumTypographyVideoSecti
       observer.observe(sectionRef.current);
     }
 
-    // Direct kickoff for above-the-fold or immediate loads
-    startPlayback();
+    playVideo();
 
     return () => {
       observer.disconnect();
-      cleanupListeners();
     };
   }, []);
-
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (video.muted) {
-      video.muted = false;
-      video.volume = 1.0;
-      setIsMuted(false);
-      setAudioNeedsInteraction(false);
-      video.play().catch(() => {});
-    } else {
-      video.muted = true;
-      setIsMuted(true);
-    }
-  };
 
   const handleCtaClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -171,25 +99,6 @@ export const QuantumTypographyVideoSection: React.FC<QuantumTypographyVideoSecti
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Quick Header Audio Indicator & Toggle */}
-            <button
-              type="button"
-              onClick={toggleMute}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-white/10 hover:border-sky-400/40 text-slate-300 hover:text-white transition-colors text-[10px]"
-            >
-              {isMuted ? (
-                <>
-                  <VolumeX size={13} className="text-rose-400" />
-                  <span>UNMUTE</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 size={13} className="text-emerald-400 animate-pulse" />
-                  <span className="text-emerald-300 font-bold">AUDIO ON</span>
-                </>
-              )}
-            </button>
-
             <Link
               href="/about"
               className="flex items-center gap-1.5 text-sky-400 hover:text-sky-300 font-bold transition-colors"
@@ -213,46 +122,8 @@ export const QuantumTypographyVideoSection: React.FC<QuantumTypographyVideoSecti
             playsInline
             controls={false}
             preload="auto"
-            onCanPlay={() => setIsVideoLoaded(true)}
-            onLoadedData={() => setIsVideoLoaded(true)}
-            onPlaying={() => setIsPlaying(true)}
             className="w-full h-full object-cover"
           />
-
-          {/* ============================================================
-              SIDE MUTE / UNMUTE BUTTON (ALWAYS VISIBLE ON SIDE)
-              ============================================================ */}
-          <div className="absolute top-4 right-4 z-30">
-            <button
-              type="button"
-              onClick={toggleMute}
-              className={cn(
-                "flex items-center gap-2 px-3.5 py-2 rounded-full",
-                "bg-slate-950/85 hover:bg-slate-900 border backdrop-blur-md",
-                "text-xs font-mono transition-all duration-300 shadow-xl hover:scale-105 active:scale-95",
-                isMuted
-                  ? "border-rose-500/40 text-rose-300 hover:border-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.2)]"
-                  : "border-emerald-400/50 text-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:border-emerald-300"
-              )}
-              aria-label={isMuted ? "Unmute video audio" : "Mute video audio"}
-              title={isMuted ? "Click to unmute sound" : "Click to mute sound"}
-            >
-              {isMuted ? (
-                <>
-                  <VolumeX size={15} className="text-rose-400" />
-                  <span className="text-[11px] font-bold text-slate-200">
-                    {audioNeedsInteraction ? "TAP FOR SOUND" : "MUTED"}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Volume2 size={15} className="text-emerald-400 animate-pulse" />
-                  <span className="text-[11px] font-bold text-white">SOUND: ON</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                </>
-              )}
-            </button>
-          </div>
 
           {/* ============================================================
               INTERACTIVE CTA OVERLAY ("VIEW FULL ABOUT SPECIFICATION ↗")

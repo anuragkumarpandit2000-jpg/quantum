@@ -27,7 +27,7 @@ const TRACKS = {
 
 export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [soundEnabled, setSoundEnabledState] = useState<boolean>(true);
-  const [volume, setVolumeState] = useState<number>(0.35);
+  const [volume, setVolumeState] = useState<number>(0.10); // Very subtle, cinematic ambient volume (0.08-0.15)
   const [currentTrack, setCurrentTrack] = useState<string>("landing");
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [needsInteraction, setNeedsInteraction] = useState<boolean>(false);
@@ -35,7 +35,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isTransitioningRef = useRef<boolean>(false);
 
-  // Initialize preference from localStorage
+  // Initialize preference from localStorage with volume capped at subtle atmospheric level
   useEffect(() => {
     const savedSound = localStorage.getItem("quantum_sound_enabled");
     if (savedSound !== null) {
@@ -43,7 +43,11 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     const savedVol = localStorage.getItem("quantum_sound_vol");
     if (savedVol !== null) {
-      setVolumeState(parseFloat(savedVol));
+      const parsed = parseFloat(savedVol);
+      // Keep within the desired subtle atmospheric range (0.08 - 0.15)
+      setVolumeState(Math.min(0.15, Math.max(0.08, parsed)));
+    } else {
+      setVolumeState(0.10);
     }
   }, []);
 
@@ -63,7 +67,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           setIsPlaying(true);
           setNeedsInteraction(false);
         } catch {
-          // Autoplay blocked by browser policy
+          // Autoplay blocked by browser policy until first gesture
           setNeedsInteraction(true);
           setIsPlaying(false);
         }
@@ -72,49 +76,32 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     tryAutoplay();
 
-    // User gesture listener to automatically unlock if blocked
+    // User gesture listener to automatically unlock if blocked by browser policy
     const handleFirstInteraction = () => {
-      if (needsInteraction && soundEnabled && audioRef.current) {
-        audioRef.current.play().then(() => {
-          setIsPlaying(true);
-          setNeedsInteraction(false);
-        }).catch(() => {});
+      if (soundEnabled && audioRef.current && audioRef.current.paused) {
+        audioRef.current.volume = volume;
+        audioRef.current
+          .play()
+          .then(() => {
+            setIsPlaying(true);
+            setNeedsInteraction(false);
+          })
+          .catch(() => {});
       }
     };
 
-    // Global listener: When any other video or audio element starts playing on page (e.g. proof video, motivational video, speech TTS),
-    // automatically pause or duck background music, and resume when finished!
-    const handleOtherMediaPlay = (e: Event) => {
-      if (e.target !== audioRef.current) {
-        if (audioRef.current && !audioRef.current.paused) {
-          audioRef.current.pause();
-          setIsPlaying(false);
-          (audioRef.current as any).__pausedByExtraSound = true;
-        }
-      }
-    };
-
-    const handleOtherMediaStop = (e: Event) => {
-      if (e.target !== audioRef.current) {
-        if (audioRef.current && (audioRef.current as any).__pausedByExtraSound && soundEnabled) {
-          (audioRef.current as any).__pausedByExtraSound = false;
-          audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
-        }
-      }
-    };
-
-    document.addEventListener("play", handleOtherMediaPlay, true);
-    document.addEventListener("pause", handleOtherMediaStop, true);
-    document.addEventListener("ended", handleOtherMediaStop, true);
+    window.addEventListener("click", handleFirstInteraction, { passive: true });
+    window.addEventListener("touchstart", handleFirstInteraction, { passive: true });
+    window.addEventListener("keydown", handleFirstInteraction, { passive: true });
+    window.addEventListener("scroll", handleFirstInteraction, { passive: true, once: true });
 
     return () => {
       audio.pause();
       audio.src = "";
       window.removeEventListener("click", handleFirstInteraction);
+      window.removeEventListener("touchstart", handleFirstInteraction);
       window.removeEventListener("keydown", handleFirstInteraction);
-      document.removeEventListener("play", handleOtherMediaPlay, true);
-      document.removeEventListener("pause", handleOtherMediaStop, true);
-      document.removeEventListener("ended", handleOtherMediaStop, true);
+      window.removeEventListener("scroll", handleFirstInteraction);
     };
   }, [soundEnabled]);
 
@@ -244,7 +231,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       }, 35);
     } else {
-      const targetVol = Math.max(0.15, preDuckVolumeRef.current || volume);
+      const targetVol = Math.min(0.15, Math.max(0.08, preDuckVolumeRef.current || volume || 0.10));
       const currentVol = audio.volume;
       const step = Math.max(0.01, (targetVol - currentVol) / 8);
       let count = 0;
