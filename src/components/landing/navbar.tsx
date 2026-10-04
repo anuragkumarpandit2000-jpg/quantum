@@ -137,26 +137,28 @@ export const LandingNavbar: React.FC = () => {
 
           {/* Right: Quick Action Hub (Clean and Uncluttered) */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link href="/login" className="hidden sm:inline-block">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="font-mono text-xs text-slate-300 hover:text-white"
-              >
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden sm:inline-flex font-mono text-xs text-slate-300 hover:text-white"
+            >
+              <Link href="/login">
                 LOGIN
-              </Button>
-            </Link>
+              </Link>
+            </Button>
 
-            <Link href="/signup">
-              <Button
-                variant="quantum"
-                size="sm"
-                className="font-mono text-xs gap-1.5 shadow-[0_0_15px_rgba(56,189,248,0.25)]"
-              >
+            <Button
+              asChild
+              variant="quantum"
+              size="sm"
+              className="font-mono text-xs gap-1.5 shadow-[0_0_15px_rgba(56,189,248,0.25)]"
+            >
+              <Link href="/signup">
                 <span>START ARC</span>
                 <ArrowRight size={13} />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       </nav>
@@ -255,32 +257,32 @@ export const LandingNavbar: React.FC = () => {
         {/* Drawer Footer: LOGIN & START ARC Action Buttons */}
         <div className="p-6 border-t border-white/[0.08] bg-slate-900/40 space-y-3 font-mono">
           <div className="flex items-center gap-2">
-            <Link
-              href="/login"
-              onClick={() => setDrawerOpen(false)}
-              className="flex-1"
+            <Button
+              asChild
+              variant="outline"
+              className="flex-1 text-xs border-slate-700 bg-slate-950/80 hover:bg-slate-900 hover:text-white"
             >
-              <Button
-                variant="outline"
-                className="w-full text-xs border-slate-700 bg-slate-950/80 hover:bg-slate-900 hover:text-white"
+              <Link
+                href="/login"
+                onClick={() => setDrawerOpen(false)}
               >
                 LOGIN
-              </Button>
-            </Link>
+              </Link>
+            </Button>
 
-            <Link
-              href="/signup"
-              onClick={() => setDrawerOpen(false)}
-              className="flex-1"
+            <Button
+              asChild
+              variant="quantum"
+              className="flex-1 text-xs shadow-[0_0_15px_rgba(56,189,248,0.3)]"
             >
-              <Button
-                variant="quantum"
-                className="w-full text-xs shadow-[0_0_15px_rgba(56,189,248,0.3)]"
+              <Link
+                href="/signup"
+                onClick={() => setDrawerOpen(false)}
               >
                 <span>START ARC</span>
                 <ArrowRight size={13} className="ml-1" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
 
           <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1">

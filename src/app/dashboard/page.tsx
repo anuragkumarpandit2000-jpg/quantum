@@ -307,7 +307,7 @@ export default function DashboardPage() {
       setTimeUntilMidnightFormatted(formatted);
 
       if (user?.profile?.startDate || user?.createdAt) {
-        const day = getActiveWinterArcDay(user.profile?.startDate || user.createdAt);
+        const day = getActiveWinterArcDay(user?.profile?.startDate || user?.createdAt || new Date());
         setActiveWinterArcDay(day);
       } else {
         // New user login cleanly initializes to Day 1
@@ -747,7 +747,7 @@ export default function DashboardPage() {
         if (user) {
           setUser({
             ...user,
-            profile: { ...user.profile, totalXP: data.totalXP },
+            profile: { ...(user.profile || {}), totalXP: data.totalXP },
           });
         }
       }
@@ -911,7 +911,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-[#02050f] text-white flex flex-col items-center justify-center font-mono space-y-4">
         <div className="w-12 h-12 rounded-full border-2 border-sky-500/20 border-t-sky-400 animate-spin" />
@@ -992,7 +992,7 @@ export default function DashboardPage() {
               <div className="relative w-10 h-10 rounded-full border border-sky-400/40 overflow-hidden shrink-0 shadow-sm aspect-square bg-slate-900/60 flex items-center justify-center">
                 {user?.profile?.avatar ? (
                   <Image
-                    src={user.profile.avatar}
+                    src={user?.profile?.avatar || "/assets/images/avatars/default_avatar.svg"}
                     alt="Avatar"
                     fill
                     className="rounded-full object-cover object-center"
@@ -1882,7 +1882,7 @@ export default function DashboardPage() {
                     <div className="relative w-24 h-24 rounded-full border-2 border-sky-400/50 overflow-hidden shadow-2xl shrink-0 aspect-square bg-slate-900/60 flex items-center justify-center">
                       {user?.profile?.avatar ? (
                         <Image
-                          src={user.profile.avatar}
+                          src={user?.profile?.avatar || "/assets/images/avatars/default_avatar.svg"}
                           alt="Profile"
                           fill
                           className="rounded-full object-cover object-center"

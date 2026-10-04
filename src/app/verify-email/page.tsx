@@ -221,11 +221,11 @@ function VerifyEmailContent() {
 
       {/* Right Column: Interactive State Container */}
       <div className="relative flex flex-col justify-center items-center p-6 sm:p-12">
-        <Link href="/" className="absolute top-8 left-8">
-          <Button variant="ghost" size="sm" className="gap-1.5 font-mono text-xs text-slate-400 hover:text-white">
+        <Button asChild variant="ghost" size="sm" className="absolute top-8 left-8 gap-1.5 font-mono text-xs text-slate-400 hover:text-white">
+          <Link href="/">
             <ChevronLeft size={16} /> RETURN HOME
-          </Button>
-        </Link>
+          </Link>
+        </Button>
 
         <div className="w-full max-w-md space-y-6">
           {/* Header Brand for Mobile */}

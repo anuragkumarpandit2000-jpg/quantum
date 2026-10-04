@@ -151,18 +151,16 @@ export default function LandingPage() {
 
           {/* CTAs */}
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-            <Link href="/signup">
-              <LiquidButton size="xl" className="shadow-2xl">
-                <span>START YOUR JOURNEY</span>
-                <ArrowRight size={18} className="text-sky-300 ml-1" />
-              </LiquidButton>
-            </Link>
+            <LiquidButton href="/signup" size="xl" className="shadow-2xl">
+              <span>START YOUR JOURNEY</span>
+              <ArrowRight size={18} className="text-sky-300 ml-1" />
+            </LiquidButton>
 
-            <Link href="/login">
-              <Button variant="outline" size="lg" className="font-mono text-xs border-slate-700 bg-slate-950/60 hover:bg-slate-900">
+            <Button asChild variant="outline" size="lg" className="font-mono text-xs border-slate-700 bg-slate-950/60 hover:bg-slate-900">
+              <Link href="/login">
                 CHALLENGER LOGIN
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
 
           {/* Award Badge integration with 3D tilt */}
@@ -415,12 +413,10 @@ export default function LandingPage() {
 
                 {/* 3. Direct Action Link */}
                 <div className="pt-1 flex items-center gap-3">
-                  <Link href="/signup" className="w-full">
-                    <LiquidButton size="lg" className="w-full shadow-xl">
-                      <span>LOCK INTO THE WINTER ARC</span>
-                      <ArrowRight size={16} className="text-sky-300 ml-1.5" />
-                    </LiquidButton>
-                  </Link>
+                  <LiquidButton href="/signup" size="lg" className="w-full shadow-xl">
+                    <span>LOCK INTO THE WINTER ARC</span>
+                    <ArrowRight size={16} className="text-sky-300 ml-1.5" />
+                  </LiquidButton>
                 </div>
               </QuantumTiltCard>
             </div>
@@ -717,18 +713,16 @@ export default function LandingPage() {
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-              <Link href="/signup">
-                <LiquidButton size="xxl" className="shadow-2xl">
-                  <span>COMMENCE 90-DAY INDUCTION</span>
-                  <ArrowRight size={20} className="text-sky-300 ml-1" />
-                </LiquidButton>
-              </Link>
+              <LiquidButton href="/signup" size="xxl" className="shadow-2xl">
+                <span>COMMENCE 90-DAY INDUCTION</span>
+                <ArrowRight size={20} className="text-sky-300 ml-1" />
+              </LiquidButton>
 
-              <Link href="/login">
-                <Button variant="outline" size="lg" className="font-mono text-xs border-slate-800 bg-slate-950/70 hover:bg-slate-900 text-slate-300">
+              <Button asChild variant="outline" size="lg" className="font-mono text-xs border-slate-800 bg-slate-950/70 hover:bg-slate-900 text-slate-300">
+                <Link href="/login">
                   CHALLENGER LOGIN
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </QuantumTiltCard>
         </div>

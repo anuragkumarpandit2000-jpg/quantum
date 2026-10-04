@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,33 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Fast pre-check: if challenger is already logged in, redirect directly to command center
+  useEffect(() => {
+    let isMounted = true;
+    const checkActiveSession = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data?.user && isMounted) {
+          if (!data.user.emailVerified) {
+            router.push(`/verify-email?email=${encodeURIComponent(data.user.email || "")}`);
+          } else if (!data.user.profile?.onboardingDone) {
+            router.push("/onboarding");
+          } else {
+            router.push("/dashboard");
+          }
+        }
+      } catch {
+        // Unauthenticated or network issue, user stays on login page
+      }
+    };
+    checkActiveSession();
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,11 +120,11 @@ export default function LoginPage() {
 
       {/* Right Login Form */}
       <div className="relative flex flex-col justify-center items-center p-6 sm:p-12">
-        <Link href="/" className="absolute top-8 left-8">
-          <Button variant="ghost" size="sm" className="gap-1.5 font-mono text-xs text-slate-400 hover:text-white">
+        <Button asChild variant="ghost" size="sm" className="absolute top-8 left-8 gap-1.5 font-mono text-xs text-slate-400 hover:text-white">
+          <Link href="/">
             <ChevronLeft size={16} /> RETURN HOME
-          </Button>
-        </Link>
+          </Link>
+        </Button>
 
         <div className="w-full max-w-sm space-y-6">
           <div className="space-y-1">

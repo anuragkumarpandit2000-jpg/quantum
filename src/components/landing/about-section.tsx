@@ -256,12 +256,12 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Link href="/about">
-              <Button className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-6 py-5 rounded-xl text-xs sm:text-sm tracking-wide shadow-[0_0_25px_rgba(56,189,248,0.4)] transition-all flex items-center gap-2">
+            <Button asChild className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-6 py-5 rounded-xl text-xs sm:text-sm tracking-wide shadow-[0_0_25px_rgba(56,189,248,0.4)] transition-all flex items-center gap-2">
+              <Link href="/about">
                 <span>VIEW FULL ABOUT SPECIFICATION</span>
                 <ExternalLink className="w-3.5 h-3.5" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </section>
       )}

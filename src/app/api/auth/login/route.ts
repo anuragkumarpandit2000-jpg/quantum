@@ -7,8 +7,16 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { identifier, password } = body; // email or username
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON request payload." },
+        { status: 400 }
+      );
+    }
+    const { identifier, password } = body || {};
 
     if (!identifier || !password) {
       return NextResponse.json(

@@ -718,21 +718,22 @@ export default function AboutPage() {
             </p>
 
             <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
-              <Link href="/signup">
-                <Button className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-8 py-6 rounded-xl text-base tracking-wide shadow-[0_0_30px_rgba(56,189,248,0.5)] hover:shadow-[0_0_45px_rgba(56,189,248,0.7)] transition-all flex items-center gap-2">
+              <Button asChild className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-8 py-6 rounded-xl text-base tracking-wide shadow-[0_0_30px_rgba(56,189,248,0.5)] hover:shadow-[0_0_45px_rgba(56,189,248,0.7)] transition-all flex items-center gap-2">
+                <Link href="/signup">
                   <span>START YOUR 90-DAY ARC</span>
                   <ArrowRight size={18} />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
 
-              <Link href="/login">
-                <Button
-                  variant="outline"
-                  className="border-white/20 hover:border-sky-400/60 bg-slate-900/60 text-white font-mono px-8 py-6 rounded-xl text-sm tracking-wider transition-all"
-                >
+              <Button
+                asChild
+                variant="outline"
+                className="border-white/20 hover:border-sky-400/60 bg-slate-900/60 text-white font-mono px-8 py-6 rounded-xl text-sm tracking-wider transition-all"
+              >
+                <Link href="/login">
                   CHALLENGER LOGIN
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </div>
         </section>

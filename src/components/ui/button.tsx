@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
@@ -117,40 +118,53 @@ function GlassFilter() {
   );
 }
 
+export interface LiquidButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof liquidbuttonVariants> {
+  asChild?: boolean;
+  href?: string;
+}
+
 function LiquidButton({
   className,
   variant,
   size,
   asChild = false,
+  href,
   children,
   ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof liquidbuttonVariants> & {
-    asChild?: boolean;
-  }) {
-  const Comp = asChild ? Slot : "button";
+}: LiquidButtonProps) {
+  const content = (
+    <>
+      <div className="absolute top-0 left-0 z-0 h-full w-full rounded-full shadow-[0_0_8px_rgba(0,0,0,0.2),inset_3px_3px_0.5px_-3.5px_rgba(56,189,248,0.25),inset_-3px_-3px_0.5px_-3.5px_rgba(56,189,248,0.4),inset_0_0_12px_rgba(56,189,248,0.15)] transition-all" />
+      <div
+        className="absolute top-0 left-0 isolate -z-10 h-full w-full overflow-hidden rounded-full bg-slate-950/70"
+        style={{ backdropFilter: 'url("#container-glass")' }}
+      />
+      <div className="pointer-events-none z-10 flex items-center justify-center gap-2">
+        {children}
+      </div>
+      <GlassFilter />
+    </>
+  );
+
+  const combinedClass = cn(
+    "relative isolate overflow-hidden border border-sky-400/20 backdrop-blur-md",
+    liquidbuttonVariants({ variant, size, className })
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={combinedClass}>
+        {content}
+      </Link>
+    );
+  }
 
   return (
-    <>
-      <Comp
-        data-slot="button"
-        className={cn(
-          "relative isolate overflow-hidden border border-sky-400/20 backdrop-blur-md",
-          liquidbuttonVariants({ variant, size, className })
-        )}
-        {...props}
-      >
-        <div className="absolute top-0 left-0 z-0 h-full w-full rounded-full shadow-[0_0_8px_rgba(0,0,0,0.2),inset_3px_3px_0.5px_-3.5px_rgba(56,189,248,0.25),inset_-3px_-3px_0.5px_-3.5px_rgba(56,189,248,0.4),inset_0_0_12px_rgba(56,189,248,0.15)] transition-all" />
-        <div
-          className="absolute top-0 left-0 isolate -z-10 h-full w-full overflow-hidden rounded-full bg-slate-950/70"
-          style={{ backdropFilter: 'url("#container-glass")' }}
-        />
-        <div className="pointer-events-none z-10 flex items-center justify-center gap-2">
-          {children}
-        </div>
-        <GlassFilter />
-      </Comp>
-    </>
+    <button data-slot="button" className={combinedClass} {...props}>
+      {content}
+    </button>
   );
 }
 

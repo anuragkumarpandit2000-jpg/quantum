@@ -10,8 +10,16 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { email, password, username, name, avatar } = body;
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON request payload." },
+        { status: 400 }
+      );
+    }
+    const { email, password, username, name, avatar } = body || {};
 
     if (!email || !password || !username) {
       return NextResponse.json(
@@ -108,14 +116,18 @@ export async function POST(req: Request) {
 
     // 4. Generate cryptographically secure single-use token and store hash in DB
     const { rawToken } = await issueEmailVerificationToken(user.id);
+    const rootUrl = getAppBaseUrl(req);
+    const verificationUrl = `${rootUrl}/verify-email?token=${encodeURIComponent(rawToken)}`;
 
-    // 5. Send verification email
-    const emailResult = await sendVerificationEmail({
+    // 5. Dispatch verification email asynchronously in background for instantaneous (<100ms) START ARC induction
+    sendVerificationEmail({
       to: user.email,
       name: user.name,
       username: user.username,
       rawToken,
-      baseUrl: getAppBaseUrl(req),
+      baseUrl: rootUrl,
+    }).catch((err) => {
+      console.error("[QUANTUM] Background verification email dispatch warning:", err);
     });
 
     // 6. Create authenticated session cookie
@@ -140,7 +152,7 @@ export async function POST(req: Request) {
         token,
         requiresVerification: true,
         message: "Challenger credentials created. Verification email dispatched to your inbox.",
-        ...(isDev && { devVerificationUrl: emailResult.verificationUrl }),
+        ...(isDev && { devVerificationUrl: verificationUrl }),
       },
       { status: 201 }
     );

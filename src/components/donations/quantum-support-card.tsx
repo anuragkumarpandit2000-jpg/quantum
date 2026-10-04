@@ -250,16 +250,16 @@ export default function QuantumSupportCard({
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-2">
-                <Link href="/login">
-                  <Button variant="quantum" className="w-full text-xs font-mono py-2.5">
+                <Button asChild variant="quantum" className="w-full text-xs font-mono py-2.5">
+                  <Link href="/login">
                     LOG IN TO PLEDGE
-                  </Button>
-                </Link>
-                <Link href="/signup">
-                  <Button variant="outline" className="w-full text-xs font-mono py-2.5 border-slate-700 bg-slate-900 hover:bg-slate-800 text-white">
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full text-xs font-mono py-2.5 border-slate-700 bg-slate-900 hover:bg-slate-800 text-white">
+                  <Link href="/signup">
                     SIGN UP
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             </div>
           ) : (
