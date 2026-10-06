@@ -89,7 +89,7 @@ const jsonLdSchema = {
       }
     },
     {
-      "@type": "WebApplication",
+      "@type": "SoftwareApplication",
       "@id": "https://www.transformationyourself.in/#app",
       "name": "QUANTUM Winter Arc",
       "url": "https://www.transformationyourself.in",
@@ -99,13 +99,6 @@ const jsonLdSchema = {
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "INR"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.9",
-        "ratingCount": "1420",
-        "bestRating": "5",
-        "worstRating": "1"
       }
     }
   ]
@@ -120,12 +113,6 @@ export default function RootLayout({
     <html lang="en" className="dark scroll-smooth" suppressHydrationWarning>
       <head>
         <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(jsonLdSchema),
-          }}
-        />
-        <script
           dangerouslySetInnerHTML={{
             __html: `
               try {
@@ -138,6 +125,12 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-quantum-obsidian text-slate-100 min-h-screen antialiased selection:bg-sky-500 selection:text-slate-950 font-sans transition-colors duration-300">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLdSchema),
+          }}
+        />
         <ThemeProvider>
           <AudioProvider>
             {children}
