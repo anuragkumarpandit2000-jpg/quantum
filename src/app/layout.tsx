@@ -28,12 +28,12 @@ export const metadata: Metadata = {
   creator: "Quantum System",
   publisher: "Quantum System",
   alternates: {
-    canonical: "https://transformationyourself.in",
+    canonical: "https://www.transformationyourself.in",
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://transformationyourself.in",
+    url: "https://www.transformationyourself.in",
     siteName: "QUANTUM — Transformation Yourself",
     title: "QUANTUM — 90-Day Winter Arc Transformation Operating System",
     description:
@@ -77,22 +77,22 @@ const jsonLdSchema = {
   "@graph": [
     {
       "@type": "WebSite",
-      "@id": "https://transformationyourself.in/#website",
-      "url": "https://transformationyourself.in",
+      "@id": "https://www.transformationyourself.in/#website",
+      "url": "https://www.transformationyourself.in",
       "name": "QUANTUM — Transformation Yourself",
       "description": "90-Day Winter Arc Transformation Operating System",
       "publisher": {
         "@type": "Organization",
         "name": "QUANTUM System",
-        "url": "https://transformationyourself.in",
-        "logo": "https://transformationyourself.in/assets/images/logo/logo.png"
+        "url": "https://www.transformationyourself.in",
+        "logo": "https://www.transformationyourself.in/assets/images/logo/logo.png"
       }
     },
     {
       "@type": "WebApplication",
-      "@id": "https://transformationyourself.in/#app",
+      "@id": "https://www.transformationyourself.in/#app",
       "name": "QUANTUM Winter Arc",
-      "url": "https://transformationyourself.in",
+      "url": "https://www.transformationyourself.in",
       "applicationCategory": "ProductivityApplication",
       "operatingSystem": "All",
       "offers": {
