@@ -28,21 +28,29 @@ declare global {
  * Returns the effective base URL for generating verification links.
  */
 export function getAppBaseUrl(req?: Request): string {
+  if (req) {
+    try {
+      const forwardedHost = req.headers.get("x-forwarded-host");
+      const forwardedProto = req.headers.get("x-forwarded-proto") || "https";
+      if (forwardedHost) {
+        return `${forwardedProto}://${forwardedHost}`.replace(/\/$/, "");
+      }
+      const host = req.headers.get("host");
+      if (host) {
+        const proto = host.includes("localhost") ? "http" : "https";
+        return `${proto}://${host}`.replace(/\/$/, "");
+      }
+    } catch {
+      // ignore
+    }
+  }
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
   }
   if (process.env.APP_URL) {
     return process.env.APP_URL.replace(/\/$/, "");
   }
-  if (req) {
-    try {
-      const url = new URL(req.url);
-      return `${url.protocol}//${url.host}`;
-    } catch {
-      // ignore
-    }
-  }
-  return "http://localhost:3000";
+  return "https://transformationyourself.in";
 }
 
 /**
@@ -52,8 +60,10 @@ function buildVerificationEmailHtml(params: {
   name: string;
   username: string;
   verificationUrl: string;
+  rootUrl?: string;
 }): string {
-  const { name, username, verificationUrl } = params;
+  const { name, username, verificationUrl, rootUrl = "https://transformationyourself.in" } = params;
+  const logoUrl = `${rootUrl.replace(/\/$/, "")}/assets/images/logo/logo.png`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -69,16 +79,25 @@ function buildVerificationEmailHtml(params: {
         <table role="presentation" width="100%" style="max-width: 580px; background: #040816; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);">
           <!-- Top Header -->
           <tr>
-            <td style="padding: 32px 32px 20px 32px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: linear-gradient(180deg, rgba(56, 189, 248, 0.08) 0%, rgba(4, 8, 22, 0) 100%);">
+            <td style="padding: 28px 32px 20px 32px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: linear-gradient(180deg, rgba(56, 189, 248, 0.08) 0%, rgba(4, 8, 22, 0) 100%);">
               <table role="presentation" width="100%">
                 <tr>
-                  <td>
-                    <span style="font-size: 20px; font-weight: 900; letter-spacing: 3px; color: #ffffff; text-transform: uppercase;">QUANTUM</span>
-                    <span style="display: inline-block; margin-left: 8px; font-size: 10px; font-family: monospace; color: #38bdf8; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 3px 8px; border-radius: 4px; vertical-align: middle;">
-                      WINTER ARC
-                    </span>
+                  <td style="vertical-align: middle;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" style="display: inline-table; vertical-align: middle;">
+                      <tr>
+                        <td style="vertical-align: middle; padding-right: 12px;">
+                          <img src="${logoUrl}" alt="Quantum Logo" width="32" height="32" style="display: block; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.35); background: #02050e; padding: 2px;" />
+                        </td>
+                        <td style="vertical-align: middle;">
+                          <span style="font-size: 20px; font-weight: 900; letter-spacing: 3px; color: #ffffff; text-transform: uppercase;">QUANTUM</span>
+                          <span style="display: inline-block; margin-left: 8px; font-size: 10px; font-family: monospace; color: #38bdf8; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 3px 8px; border-radius: 4px; vertical-align: middle;">
+                            WINTER ARC
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
-                  <td align="right">
+                  <td align="right" style="vertical-align: middle;">
                     <span style="font-size: 11px; font-family: monospace; color: #94a3b8; letter-spacing: 1px;">
                       PROTOCOL v2.6
                     </span>
@@ -196,7 +215,7 @@ export async function sendVerificationEmail(params: SendVerificationEmailParams)
   const verificationUrl = `${rootUrl}/verify-email?token=${encodeURIComponent(rawToken)}`;
 
   const resendApiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.EMAIL_FROM || "Quantum System <onboarding@resend.dev>";
+  const fromEmail = process.env.EMAIL_FROM || "Quantum <noreply@transformationyourself.in>";
 
   // Cache in global dev state so local verification links can be retrieved/tested easily
   global.__QUANTUM_DEV_LAST_EMAIL__ = {
@@ -219,7 +238,7 @@ export async function sendVerificationEmail(params: SendVerificationEmailParams)
           from: activeFrom,
           to: [to],
           subject: "[QUANTUM] Ratify Your Winter Arc Identity • Verify Email",
-          html: buildVerificationEmailHtml({ name, username, verificationUrl }),
+          html: buildVerificationEmailHtml({ name, username, verificationUrl, rootUrl }),
           text: buildVerificationEmailText({ name, username, verificationUrl }),
         }),
       });
@@ -240,7 +259,7 @@ export async function sendVerificationEmail(params: SendVerificationEmailParams)
               from: activeFrom,
               to: [to],
               subject: "[QUANTUM] Ratify Your Winter Arc Identity • Verify Email",
-              html: buildVerificationEmailHtml({ name, username, verificationUrl }),
+              html: buildVerificationEmailHtml({ name, username, verificationUrl, rootUrl }),
               text: buildVerificationEmailText({ name, username, verificationUrl }),
             }),
           });
