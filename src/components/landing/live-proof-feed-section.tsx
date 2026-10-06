@@ -186,6 +186,7 @@ export const LiveProofFeedSection: React.FC = () => {
                     muted
                     playsInline
                     autoPlay
+                    preload="none"
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (

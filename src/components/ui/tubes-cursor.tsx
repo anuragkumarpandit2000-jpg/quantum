@@ -34,6 +34,15 @@ export default function TubesCursor({ className, fullPage = true }: TubesCursorP
   useEffect(() => {
     let isMounted = true;
 
+    // Skip heavy 3D WebGL Three.js canvas on mobile / touch-only devices to save GPU & battery
+    if (typeof window !== "undefined") {
+      const isMobileDevice =
+        window.innerWidth < 768 || window.matchMedia("(pointer: coarse)").matches;
+      if (isMobileDevice) {
+        return;
+      }
+    }
+
     // Delaying initialization ensures DOM is painted and final dimensions are ready
     const initTimer = setTimeout(async () => {
       try {
@@ -107,7 +116,7 @@ export default function TubesCursor({ className, fullPage = true }: TubesCursorP
 
   if (fullPage) {
     return (
-      <div className={`fixed inset-0 pointer-events-none overflow-hidden z-0 ${className || ""}`}>
+      <div className={`hidden md:block fixed inset-0 pointer-events-none overflow-hidden z-0 ${className || ""}`}>
         <canvas
           ref={canvasRef}
           className="fixed inset-0 w-screen h-screen pointer-events-none z-0 opacity-90"
@@ -119,7 +128,7 @@ export default function TubesCursor({ className, fullPage = true }: TubesCursorP
   return (
     <div
       onClick={handleColorChange}
-      className={`absolute inset-0 overflow-hidden cursor-pointer z-0 ${className || ""}`}
+      className={`hidden md:block absolute inset-0 overflow-hidden cursor-pointer z-0 ${className || ""}`}
     >
       <canvas
         ref={canvasRef}

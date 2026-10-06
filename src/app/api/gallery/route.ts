@@ -48,14 +48,15 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    let user = await getCurrentUser(req);
+    const user = await getCurrentUser(req);
     if (!user) {
-      user = await prisma.user.findFirst({
-        include: { profile: true, settings: true, streak: true },
-      });
-      if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        { error: "Email verification required to log execution proofs." },
+        { status: 403 }
+      );
     }
 
     const body = await req.json();

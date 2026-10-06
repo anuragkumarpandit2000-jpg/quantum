@@ -54,19 +54,35 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Check existing user
-    const existing = await prisma.user.findFirst({
+    // 2. Check existing active (verified) users
+    const existingVerified = await prisma.user.findFirst({
       where: {
+        emailVerified: true,
         OR: [{ email: cleanEmail }, { username: cleanUsername }],
       },
     });
 
-    if (existing) {
+    if (existingVerified) {
+      if (existingVerified.email.toLowerCase() === cleanEmail) {
+        return NextResponse.json(
+          { error: "An active account with this email already exists. Please log in." },
+          { status: 409 }
+        );
+      }
       return NextResponse.json(
-        { error: "Email or callsign is already registered in the Quantum system." },
+        { error: "Callsign is already occupied by an active challenger. Please choose another." },
         { status: 409 }
       );
     }
+
+    // 2b. Clean up unverified abandoned signups matching this email or username
+    // This prevents phantom participants and allows a user to go back and edit their info cleanly.
+    await prisma.user.deleteMany({
+      where: {
+        emailVerified: false,
+        OR: [{ email: cleanEmail }, { username: cleanUsername }],
+      },
+    });
 
     const passwordHash = hashPassword(password);
     const resolvedAvatar =
@@ -159,7 +175,7 @@ export async function POST(req: Request) {
 
     response.cookies.set(AUTH_COOKIE_NAME, token, {
       httpOnly: true,
-      secure: false, // allow localhost testing
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: "/",

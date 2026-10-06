@@ -553,11 +553,22 @@ function VerifyEmailContent() {
                   )}
                 </Button>
 
-                <div className="text-center font-mono text-[11px] text-slate-500">
-                  Wrong address?{" "}
-                  <Link href="/login" className="text-sky-400 hover:underline">
-                    Sign in with another account
-                  </Link>
+                <div className="flex flex-col items-center gap-2 pt-1 text-center font-mono text-[11px] text-slate-400">
+                  <div>
+                    Need to change your email or callsign?{" "}
+                    <Link
+                      href={`/signup?email=${encodeURIComponent(targetEmail)}`}
+                      className="text-sky-400 hover:underline font-semibold"
+                    >
+                      Edit details / Restart signup
+                    </Link>
+                  </div>
+                  <div>
+                    Already registered?{" "}
+                    <Link href="/login" className="text-slate-400 hover:text-white hover:underline">
+                      Sign in with another account
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

@@ -35,6 +35,23 @@ export const MobileRotatingShowcase: React.FC<MobileRotatingShowcaseProps> = ({
   const [loadedCount, setLoadedCount] = useState<number>(0);
   const [isReady, setIsReady] = useState<boolean>(false);
   const [isReducedMotion, setIsReducedMotion] = useState<boolean>(false);
+  const [isInView, setIsInView] = useState<boolean>(true);
+
+  // Pause rendering when canvas is scrolled off-screen to save CPU & GPU
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0.05 }
+    );
+
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, []);
 
   // Check prefers-reduced-motion
   useEffect(() => {
@@ -148,9 +165,9 @@ export const MobileRotatingShowcase: React.FC<MobileRotatingShowcaseProps> = ({
     drawFrame(currentFrameRef.current);
   }, [drawFrame]);
 
-  // Continuous 360° Animation Loop (Never freezes)
+  // Continuous 360° Animation Loop (Pauses automatically when off-screen)
   useEffect(() => {
-    if (!isPlaying || isReducedMotion) {
+    if (!isPlaying || isReducedMotion || !isInView) {
       if (animFrameIdRef.current) {
         cancelAnimationFrame(animFrameIdRef.current);
         animFrameIdRef.current = null;
@@ -188,7 +205,7 @@ export const MobileRotatingShowcase: React.FC<MobileRotatingShowcaseProps> = ({
         animFrameIdRef.current = null;
       }
     };
-  }, [isPlaying, isReducedMotion, frameRate, totalFrames, drawFrame]);
+  }, [isPlaying, isReducedMotion, isInView, frameRate, totalFrames, drawFrame]);
 
   // Interactive Drag / Touch Scrubbing
   const handlePointerDown = (clientX: number) => {

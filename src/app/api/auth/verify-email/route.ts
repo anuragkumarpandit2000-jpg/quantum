@@ -155,7 +155,7 @@ export async function POST(req: Request) {
     // Refresh auth cookie with verified session
     response.cookies.set(AUTH_COOKIE_NAME, sessionJwt, {
       httpOnly: true,
-      secure: false, // allow localhost testing
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 30 * 24 * 60 * 60,
       path: "/",

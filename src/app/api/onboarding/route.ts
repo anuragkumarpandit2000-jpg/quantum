@@ -15,6 +15,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (user.profile?.onboardingDone) {
+      return NextResponse.json(
+        { error: "Onboarding contract has already been ratified for this account." },
+        { status: 400 }
+      );
+    }
+
     const body = await req.json();
     const {
       name,

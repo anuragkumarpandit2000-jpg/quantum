@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, isAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
+
+function sanitizeText(str: string): string {
+  return str.replace(/<[^>]*>?/gm, "").trim();
+}
 
 export async function GET(req: Request) {
   try {
@@ -50,50 +54,92 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const user = await getCurrentUser(req);
+    if (!user) {
+      return NextResponse.json(
+        { error: "Authentication required to submit a verified review." },
+        { status: 401 }
+      );
+    }
+
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        { error: "Email verification required before posting reviews." },
+        { status: 403 }
+      );
+    }
+
+    // Rate-limit review submissions per user (1 every 24h)
+    const existingReview = await prisma.feedback.findFirst({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (existingReview) {
+      const hoursSinceLast =
+        (Date.now() - new Date(existingReview.createdAt).getTime()) / (1000 * 60 * 60);
+      if (hoursSinceLast < 24 && !isAdmin(user)) {
+        return NextResponse.json(
+          { error: "You have already submitted a review recently. Please wait 24 hours before submitting another." },
+          { status: 429 }
+        );
+      }
+    }
+
     const body = await req.json();
-    const {
-      authorName,
-      authorTitle,
-      quote,
-      rating,
-      avatarUrl,
-      donationAmount,
-      donationCurrency,
-      isDonation,
-    } = body;
+    const { authorName, authorTitle, quote, rating, avatarUrl } = body;
+
+    const rawQuote = typeof quote === "string" ? quote : "";
+    const cleanQuote = sanitizeText(rawQuote).substring(0, 500);
+
+    if (cleanQuote.length < 5) {
+      return NextResponse.json(
+        { error: "Review quote must be at least 5 characters long." },
+        { status: 400 }
+      );
+    }
 
     const resolvedRating = Math.min(5, Math.max(1, parseInt(rating, 10) || 5));
-    const isDonationSupporter = Boolean(
-      isDonation || (donationAmount && Number(donationAmount) > 0)
-    );
-    const parsedDonation = isDonationSupporter && donationAmount ? Number(donationAmount) : null;
-    const parsedCurrency = donationCurrency?.trim() || "INR";
 
-    const defaultQuote = isDonationSupporter
-      ? `Proud patron supporter of the Quantum OS! Contributed ${parsedCurrency} ${parsedDonation || ""}. Unbreakable focus.`
-      : `Rated ${resolvedRating}★ in the Quantum Winter Arc. Pure discipline and system execution.`;
+    // Verify donation against actual completed database records
+    let isDonationSupporter = false;
+    let verifiedDonationAmount: number | null = null;
+    const completedDonation = await prisma.donation.findFirst({
+      where: { userId: user.id, status: "COMPLETED" },
+      orderBy: { amount: "desc" },
+    });
 
-    const finalQuote = quote?.trim() || defaultQuote;
+    if (completedDonation) {
+      isDonationSupporter = true;
+      verifiedDonationAmount = completedDonation.amount;
+    }
 
-    const resolvedName = authorName?.trim() || user?.name || "Verified Challenger";
+    const cleanAuthorName = authorName ? sanitizeText(String(authorName)).substring(0, 50) : "";
+    const resolvedName = cleanAuthorName || user.name || user.username || "Verified Challenger";
+
+    const cleanAuthorTitle = authorTitle ? sanitizeText(String(authorTitle)).substring(0, 50) : "";
     const resolvedTitle =
-      authorTitle?.trim() ||
-      (isDonationSupporter ? "Quantum Royal Patron" : "Arc Challenger");
+      cleanAuthorTitle ||
+      (isDonationSupporter
+        ? "Quantum Royal Patron"
+        : user.profile?.currentClass || `Level ${user.profile?.level || 1} Challenger`);
+
     const resolvedAvatar =
-      avatarUrl || user?.profile?.avatar || "/assets/images/avatars/default_avatar.svg";
+      (typeof avatarUrl === "string" && avatarUrl.startsWith("/") ? avatarUrl : null) ||
+      user.profile?.avatar ||
+      "/assets/images/avatars/default_avatar.svg";
 
     const newFeedback = await prisma.feedback.create({
       data: {
-        userId: user?.id || null,
+        userId: user.id,
         authorName: resolvedName,
         authorTitle: resolvedTitle,
-        quote: finalQuote,
+        quote: cleanQuote,
         rating: resolvedRating,
         avatarUrl: resolvedAvatar,
-        donationAmount: parsedDonation,
-        donationCurrency: parsedCurrency,
+        donationAmount: verifiedDonationAmount,
+        donationCurrency: "INR",
         isDonation: isDonationSupporter,
-        isApproved: true, // auto-approved for live showcase
+        isApproved: true,
         isSample: false,
       },
     });

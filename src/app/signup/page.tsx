@@ -1,24 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Shield, ChevronLeft, AtSign, Lock, User, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FloatingPaths from "@/components/ui/floating-paths";
 import ProfileAvatarUploader from "@/components/ui/profile-avatar-uploader";
 
-export default function SignupPage() {
+function SignupContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryEmail = searchParams.get("email") || "";
+  const queryUsername = searchParams.get("username") || "";
+
   const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState(queryUsername);
+  const [email, setEmail] = useState(queryEmail);
   const [password, setPassword] = useState("");
   const [avatar, setAvatar] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (queryEmail && !email) setEmail(queryEmail);
+    if (queryUsername && !username) setUsername(queryUsername);
+  }, [queryEmail, queryUsername]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,5 +224,20 @@ export default function SignupPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#02050e] text-white flex flex-col items-center justify-center font-mono space-y-4">
+          <div className="w-12 h-12 rounded-full border-2 border-sky-500/20 border-t-sky-400 animate-spin" />
+          <div className="text-xs tracking-widest text-sky-400">INITIALIZING ENROLLMENT...</div>
+        </div>
+      }
+    >
+      <SignupContent />
+    </Suspense>
   );
 }

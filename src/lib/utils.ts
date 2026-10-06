@@ -64,7 +64,7 @@ export const WINTER_ARC_MILESTONES: WinterArcMilestone[] = [
   {
     level: 2,
     minDays: 7,
-    nextDays: 14,
+    nextDays: 21,
     tier: "Discipline Neophyte",
     title: "Obsidian Persistence",
     quote: "Day 07 unlocked. 1 Full week of continuous, unbroken consistency.",
@@ -72,11 +72,11 @@ export const WINTER_ARC_MILESTONES: WinterArcMilestone[] = [
   },
   {
     level: 3,
-    minDays: 14,
+    minDays: 21,
     nextDays: 25,
     tier: "Kinetic Operator",
     title: "Habit Fortress",
-    quote: "Day 14 reached. Two full weeks of continuous execution.",
+    quote: "Day 21 reached. Three full weeks of continuous execution.",
     badgeColor: "#818cf8",
   },
   {
@@ -177,7 +177,7 @@ export function calculateLevel(
   // Exact Winter Arc Level Ladder:
   // Day 1: Level 1
   // Day 7: Level 2
-  // Day 14: Level 3
+  // Day 21: Level 3
   // Day 25: Level 4
   // Day 30: Level 5
   // Day 45: Level 6
@@ -193,7 +193,7 @@ export function calculateLevel(
   else if (s >= 45) m = WINTER_ARC_MILESTONES[5];
   else if (s >= 30) m = WINTER_ARC_MILESTONES[4];
   else if (s >= 25) m = WINTER_ARC_MILESTONES[3];
-  else if (s >= 14) m = WINTER_ARC_MILESTONES[2];
+  else if (s >= 21) m = WINTER_ARC_MILESTONES[2];
   else if (s >= 7) m = WINTER_ARC_MILESTONES[1];
   else m = WINTER_ARC_MILESTONES[0];
 

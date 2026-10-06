@@ -20,10 +20,16 @@ export async function GET(req: Request) {
 
     const [totalParticipants, rankedUsers] = await Promise.all([
       prisma.user.count({
-        where: { settings: { leaderboardVisible: true } },
+        where: {
+          emailVerified: true,
+          settings: { leaderboardVisible: true },
+        },
       }),
       prisma.user.findMany({
-        where: { settings: { leaderboardVisible: true } },
+        where: {
+          emailVerified: true,
+          settings: { leaderboardVisible: true },
+        },
         orderBy: orderByClause,
         take: 50,
         select: {
@@ -54,24 +60,42 @@ export async function GET(req: Request) {
 
     let currentUserRank = -1;
 
-    if (user) {
+    if (user && user.emailVerified) {
       const topIndex = rankedUsers.findIndex((u) => u.id === user.id);
       if (topIndex >= 0) {
         currentUserRank = topIndex + 1;
       } else {
         if (category === "streak") {
           const higher = await prisma.streak.count({
-            where: { currentStreak: { gt: user.streak?.currentStreak || 0 } },
+            where: {
+              user: {
+                emailVerified: true,
+                settings: { leaderboardVisible: true },
+              },
+              currentStreak: { gt: user.streak?.currentStreak || 0 },
+            },
           });
           currentUserRank = higher + 1;
         } else if (category === "consistency") {
           const higher = await prisma.streak.count({
-            where: { consistencyRate: { gt: user.streak?.consistencyRate || 0 } },
+            where: {
+              user: {
+                emailVerified: true,
+                settings: { leaderboardVisible: true },
+              },
+              consistencyRate: { gt: user.streak?.consistencyRate || 0 },
+            },
           });
           currentUserRank = higher + 1;
         } else {
           const higher = await prisma.profile.count({
-            where: { totalXP: { gt: user.profile?.totalXP || 0 } },
+            where: {
+              user: {
+                emailVerified: true,
+                settings: { leaderboardVisible: true },
+              },
+              totalXP: { gt: user.profile?.totalXP || 0 },
+            },
           });
           currentUserRank = higher + 1;
         }

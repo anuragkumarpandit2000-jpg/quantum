@@ -4,7 +4,16 @@ import React from "react";
 import { motion } from "framer-motion";
 
 export function FloatingPaths({ position = 1 }: { position?: number }) {
-  const paths = Array.from({ length: 36 }, (_, i) => ({
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsMobile(window.innerWidth < 768);
+    }
+  }, []);
+
+  const pathCount = isMobile ? 14 : 36;
+  const paths = Array.from({ length: pathCount }, (_, i) => ({
     id: i,
     d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${
       380 - i * 5 * position

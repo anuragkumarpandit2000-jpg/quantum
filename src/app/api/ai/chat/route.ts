@@ -23,6 +23,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
+    const sanitizedMessage = message.trim().slice(0, 4000);
+
     // Fetch user context: habits, skills, certificate with contract & onboarding dossier
     const [habits, skills, cert] = await Promise.all([
       prisma.habit.findMany({
@@ -53,13 +55,23 @@ export async function POST(req: Request) {
     const answers = parsedContract?.answers || {};
     const analysis = parsedContract?.analysis || {};
 
-    // Get or create conversation
+    // Get or create conversation (with strict ownership check to prevent IDOR)
     let convId = conversationId;
+    if (convId) {
+      const existingConv = await prisma.aIConversation.findUnique({
+        where: { id: convId },
+      });
+      if (!existingConv || existingConv.userId !== user.id) {
+        // Forbidden or invalid ID: fallback to creating a dedicated user conversation
+        convId = null;
+      }
+    }
+
     if (!convId) {
       const conv = await prisma.aIConversation.create({
         data: {
           userId: user.id,
-          title: message.slice(0, 40) + "...",
+          title: sanitizedMessage.slice(0, 40) + "...",
         },
       });
       convId = conv.id;

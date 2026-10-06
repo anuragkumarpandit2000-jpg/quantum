@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser, isAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,11 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const user = await getCurrentUser(req);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = params;
     if (!id) {
       return NextResponse.json({ error: "Missing proof ID" }, { status: 400 });
@@ -19,6 +25,13 @@ export async function DELETE(
 
     if (!existing) {
       return NextResponse.json({ error: "Proof not found" }, { status: 404 });
+    }
+
+    if (existing.userId !== user.id && !isAdmin(user)) {
+      return NextResponse.json(
+        { error: "Forbidden: You can only delete your own proofs." },
+        { status: 403 }
+      );
     }
 
     await prisma.galleryItem.delete({
@@ -37,6 +50,11 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const user = await getCurrentUser(req);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = params;
     if (!id) {
       return NextResponse.json({ error: "Missing proof ID" }, { status: 400 });
@@ -48,6 +66,13 @@ export async function PATCH(
 
     if (!existing) {
       return NextResponse.json({ error: "Proof not found" }, { status: 404 });
+    }
+
+    if (existing.userId !== user.id && !isAdmin(user)) {
+      return NextResponse.json(
+        { error: "Forbidden: You can only update your own proofs." },
+        { status: 403 }
+      );
     }
 
     const body = await req.json();

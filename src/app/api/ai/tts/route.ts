@@ -34,7 +34,8 @@ function pcmToWav(pcmBase64: string, sampleRate = 24000, numChannels = 1, bitsPe
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const text = searchParams.get("text") || "Boss, kya haal? Aaj Day 17 hai. Winter Arc rukna nahi chahiye!";
+    const rawText = searchParams.get("text") || "Boss, kya haal? Aaj Day 17 hai. Winter Arc rukna nahi chahiye!";
+    const text = String(rawText).trim().slice(0, 500);
 
     return await handleTTS(text);
   } catch (err: any) {
@@ -46,7 +47,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const text = body.text || "Boss, kya haal? Aaj Day 17 hai. Winter Arc rukna nahi chahiye!";
+    const rawText = body.text || "Boss, kya haal? Aaj Day 17 hai. Winter Arc rukna nahi chahiye!";
+    const text = String(rawText).trim().slice(0, 500);
 
     return await handleTTS(text, body.voice);
   } catch (err: any) {

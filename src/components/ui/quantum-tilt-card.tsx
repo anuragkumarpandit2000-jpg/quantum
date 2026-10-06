@@ -96,7 +96,7 @@ export const QuantumTiltCard: React.FC<QuantumTiltCardProps> = ({
         enableScrollBlur &&
           (isVisible
             ? "filter-none opacity-100 translate-y-0"
-            : "blur-[9px] opacity-60 translate-y-7")
+            : "opacity-60 translate-y-4 md:blur-[9px] md:translate-y-7")
       )}
     >
       <div

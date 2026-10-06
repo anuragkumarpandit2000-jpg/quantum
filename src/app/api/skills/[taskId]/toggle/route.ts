@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { calculateLevel } from "@/lib/utils";
 
 export async function PATCH(
   req: Request,
@@ -10,6 +11,13 @@ export async function PATCH(
     const user = await getCurrentUser(req);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        { error: "Email verification required before completing skill tasks." },
+        { status: 403 }
+      );
     }
 
     const { taskId } = await Promise.resolve(params);
@@ -47,16 +55,17 @@ export async function PATCH(
         },
       });
 
-      // 2. Adjust Profile XP
+      // 2. Adjust Profile XP and preserve unified level system
       const currentXP = user.profile?.totalXP || 0;
       const newTotalXP = Math.max(0, currentXP + xpDelta);
-      const newLevel = Math.floor(newTotalXP / 1000) + 1;
+      const levelData = calculateLevel(user.streak?.currentStreak || 0);
 
       await tx.profile.update({
         where: { userId: user.id },
         data: {
           totalXP: newTotalXP,
-          level: newLevel,
+          level: levelData.level,
+          currentClass: levelData.tier,
         },
       });
 

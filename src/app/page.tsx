@@ -53,8 +53,6 @@ import { SovereignBadgesShowcase } from "@/components/landing/sovereign-badges-s
 import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
-  // Cursor parallax state for hero background
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [liveTelemetry, setLiveTelemetry] = useState<{ liveNow: number; totalChallengers: number }>({
     liveNow: 1,
     totalChallengers: 1,
@@ -75,27 +73,15 @@ export default function LandingPage() {
       .catch(() => {});
   }, []);
 
-  // Parallax tracking
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const { innerWidth, innerHeight } = window;
-      const x = (e.clientX / innerWidth - 0.5) * 30;
-      const y = (e.clientY / innerHeight - 0.5) * 30;
-      setMousePos({ x, y });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
   return (
     <div className="relative min-h-screen bg-[#030712] text-slate-100 selection:bg-sky-500 selection:text-slate-950 overflow-x-hidden">
-      {/* 3D TubesCursor Interactive Color-Emitting Background Canvas across the entire page */}
+      {/* 3D TubesCursor Interactive Color-Emitting Background Canvas across desktop */}
       <TubesCursor fullPage />
 
-      {/* Atmospheric frosted depth blur masks: content below viewport appears blurry before entering */}
-      <div className="fixed bottom-0 left-0 right-0 h-28 pointer-events-none z-30 backdrop-blur-md [mask-image:linear-gradient(to_top,black_40%,transparent)]" />
-      <div className="fixed top-0 left-0 right-0 h-16 pointer-events-none z-30 backdrop-blur-[4px] [mask-image:linear-gradient(to_bottom,black_20%,transparent)]" />
+      {/* Atmospheric depth blur masks: desktop gets full frosted glass, mobile gets lightweight zero-lag gradient */}
+      <div className="hidden md:block fixed bottom-0 left-0 right-0 h-28 pointer-events-none z-30 backdrop-blur-md [mask-image:linear-gradient(to_top,black_40%,transparent)]" />
+      <div className="hidden md:block fixed top-0 left-0 right-0 h-16 pointer-events-none z-30 backdrop-blur-[4px] [mask-image:linear-gradient(to_bottom,black_20%,transparent)]" />
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 pointer-events-none z-30 bg-gradient-to-t from-[#030712]/90 to-transparent" />
 
       <LandingNavbar />
 

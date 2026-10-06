@@ -16,18 +16,32 @@ export async function GET() {
       publicProofsCount,
       topLeader,
     ] = await Promise.all([
-      prisma.user.count(),
       prisma.user.count({
-        where: { lastActiveAt: { gte: fifteenMinutesAgo } },
+        where: { emailVerified: true },
+      }),
+      prisma.user.count({
+        where: {
+          emailVerified: true,
+          lastActiveAt: { gte: fifteenMinutesAgo },
+        },
       }),
       prisma.habitCompletion.count({
-        where: { status: "COMPLETED" },
+        where: {
+          status: "COMPLETED",
+          habit: { user: { emailVerified: true } },
+        },
       }),
       prisma.galleryItem.count({
-        where: { isPublic: true },
+        where: {
+          isPublic: true,
+          user: { emailVerified: true },
+        },
       }),
       prisma.user.findFirst({
-        where: { settings: { leaderboardVisible: true } },
+        where: {
+          emailVerified: true,
+          settings: { leaderboardVisible: true },
+        },
         orderBy: { profile: { totalXP: "desc" } },
         select: {
           name: true,

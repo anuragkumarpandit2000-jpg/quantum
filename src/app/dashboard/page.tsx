@@ -594,14 +594,12 @@ export default function DashboardPage() {
     isLevelUp?: boolean,
     milestone?: any
   ) => {
-    // Exact Winter Arc Level Ladder Check: Day 1, 7, 14, 25, 30, 45, 52, 65, 75, 90
+    // Winter Arc Level Progression (Level 1 = 1 day, Level 2 = 7 days, Level 3 = 21 days, etc.)
     const levelInfo = calculateLevel(currentStreak);
-    const oldLevel = user?.profile?.level || 1;
+    const oldLevel = user?.profile?.level ?? 0;
 
-    const exactMilestoneDays = [1, 7, 14, 25, 30, 45, 52, 65, 75, 90];
-    const isExactMilestone = exactMilestoneDays.includes(currentStreak);
-
-    if ((isLevelUp || levelInfo.level > oldLevel || isExactMilestone) && currentStreak >= 1) {
+    // Show level up celebration ONLY once when a new level threshold is genuinely crossed
+    if (isLevelUp && levelInfo.level > oldLevel && levelInfo.level > 0) {
       setLevelUpData({
         level: levelInfo.level,
         tier: levelInfo.tier,
@@ -1502,7 +1500,7 @@ export default function DashboardPage() {
               </div>
 
               {/* 3D Wall Calendar Integration */}
-              <div className="p-6 rounded-2xl bg-slate-950/35 backdrop-blur-xl border border-white/10 shadow-xl">
+              <div className="p-3 sm:p-6 rounded-2xl bg-slate-950/35 backdrop-blur-xl border border-white/10 shadow-xl overflow-hidden">
                 <ThreeDWallCalendar
                   events={[
                     { id: "1", title: "Day 01 Arc Genesis", date: new Date().toISOString() },

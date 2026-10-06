@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, isAdmin } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
@@ -103,9 +103,9 @@ export async function GET(req: Request) {
       )
     );
 
-    // Eligible if 90 days reached or certificate already issued
+    // Eligible if certificate already issued or strictly 90 days verified completed
     const isCompleted = !!completionCert;
-    const isEligible = isCompleted || currentDay >= 90 || completedDaysCount >= 90;
+    const isEligible = isCompleted || completedDaysCount >= 90 || isAdmin(user);
 
     let certData = null;
     if (completionCert) {
@@ -157,6 +157,13 @@ export async function POST(req: Request) {
     const user = await getCurrentUser(req);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        { error: "Email verification required to claim completion certificate." },
+        { status: 403 }
+      );
     }
 
     const fullUser = await prisma.user.findUnique({
@@ -222,18 +229,17 @@ export async function POST(req: Request) {
           (1000 * 60 * 60 * 24)
       ) + 1;
 
-    // Allow completion if daysElapsed >= 90, completedDays >= 90, or test claim flag provided in development
+    // Strict validation: Require actual 90 completed days (or admin override)
     const isEligible =
-      daysElapsed >= 90 ||
       completedDaysCount >= 90 ||
-      body.forceComplete === true ||
-      process.env.NODE_ENV !== "production";
+      (isAdmin(user) && body.forceComplete === true);
 
     if (!isEligible) {
       return NextResponse.json(
         {
-          error: "CERTIFICATE LOCKED. Complete your 90-Day Arc to unlock your certificate.",
+          error: "CERTIFICATE LOCKED. Complete all 90 Days of your Arc to unlock your certificate.",
           currentDay: Math.min(90, daysElapsed),
+          completedDays: completedDaysCount,
           requiredDays: 90,
         },
         { status: 403 }
