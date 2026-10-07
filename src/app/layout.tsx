@@ -6,38 +6,25 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.transformationyourself.in"),
   title: {
-    default: "QUANTUM — 90-Day Winter Arc Transformation Operating System",
+    default: "QUANTUM — 90-Day Winter Arc Habit & Discipline Operating System",
     template: "%s | QUANTUM Winter Arc",
   },
   description:
-    "An elite futuristic personal transformation platform. Master daily habits, accountability streaks, XP progression, and 90 consecutive days of unwavering discipline.",
-  keywords: [
-    "Transformation Yourself",
-    "transformationyourself.in",
-    "Quantum",
-    "Quantum Winter Arc",
-    "Winter Arc Challenge",
-    "Winter Arc 2025",
-    "90 Day Transformation",
-    "Gamified Habit Tracker",
-    "Productivity OS",
-    "Self Discipline Protocol",
-    "Winter Arc App",
-  ],
-  authors: [{ name: "Quantum System", url: "https://transformationyourself.in" }],
-  creator: "Quantum System",
-  publisher: "Quantum System",
+    "An autonomous personal transformation operating system. Master daily habits, accountability streaks, authentic XP progression, and 90 consecutive days of focused discipline.",
+  authors: [{ name: "Anurag Pandit", url: "https://www.transformationyourself.in" }],
+  creator: "QUANTUM",
+  publisher: "QUANTUM",
   alternates: {
     canonical: "https://www.transformationyourself.in",
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "en_IN",
     url: "https://www.transformationyourself.in",
     siteName: "QUANTUM — Transformation Yourself",
-    title: "QUANTUM — 90-Day Winter Arc Transformation Operating System",
+    title: "QUANTUM — 90-Day Winter Arc Habit & Discipline System",
     description:
-      "Lock in for 90 days. Master habits, level up with XP telemetry, compete on the leaderboard, and claim your physical transformation.",
+      "Lock in for 90 days. Master habits, level up with verified XP, compete on the leaderboard, and claim your physical transformation.",
     images: [
       {
         url: "/assets/images/background.png",
@@ -51,7 +38,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "QUANTUM — 90-Day Winter Arc Transformation OS",
     description:
-      "Lock in for 90 days. Master habits, level up with XP telemetry, and transform yourself.",
+      "Lock in for 90 days. Master habits, level up with verified XP, and build unbroken discipline.",
     images: ["/assets/images/background.png"],
   },
   robots: {
@@ -76,30 +63,66 @@ const jsonLdSchema = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "WebSite",
-      "@id": "https://www.transformationyourself.in/#website",
+      "@type": "Organization",
+      "@id": "https://www.transformationyourself.in/#organization",
+      "name": "QUANTUM",
       "url": "https://www.transformationyourself.in",
-      "name": "QUANTUM — Transformation Yourself",
-      "description": "90-Day Winter Arc Transformation Operating System",
-      "publisher": {
-        "@type": "Organization",
-        "name": "QUANTUM System",
-        "url": "https://www.transformationyourself.in",
-        "logo": "https://www.transformationyourself.in/assets/images/logo/logo.png"
+      "logo": "https://www.transformationyourself.in/assets/images/logo/logo.png",
+      "founder": {
+        "@type": "Person",
+        "name": "Anurag Pandit"
       }
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "WebApplication",
       "@id": "https://www.transformationyourself.in/#app",
       "name": "QUANTUM Winter Arc",
       "url": "https://www.transformationyourself.in",
-      "applicationCategory": "ProductivityApplication",
+      "applicationCategory": "HealthAndFitnessApplication, ProductivityApplication",
       "operatingSystem": "All",
       "offers": {
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "INR"
       }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://www.transformationyourself.in/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is the timeline: 92 days vs 90 days?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The global Winter Arc window spans 92 days (1 October to 31 December). Each challenger commits to a 90-day personal arc. If you join after 1 October, your personal 90-day counter begins on your Day 1."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "When does each day reset?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Days reset strictly at local midnight (Indian Standard Time / IST by default)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does the 90-Day Habit Matrix work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Each habit displays a 90-day horizontal grid. Clicking a box marks it completed and awards +50 XP. Double-clicking marks it missed. You need an 80% completion rate (maximum 18 misses across the 90 days) to qualify for the completion certificate."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Quantum free to use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, completely free. All core systems—Habit Matrix, XP Engine, Skill Decomposer, Proof Gallery, 3D Calendar, and Quantum Core AI—have zero paywalls."
+          }
+        }
+      ]
     }
   ]
 };

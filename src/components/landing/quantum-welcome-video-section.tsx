@@ -103,7 +103,6 @@ export const QuantumWelcomeVideoSection: React.FC<QuantumWelcomeVideoSectionProp
         <div className="relative w-full aspect-video bg-black overflow-hidden select-none">
           <video
             ref={videoRef}
-            src="/assets/videos/welcome.mp4"
             poster="/assets/videos/welcome_poster.jpg"
             autoPlay
             loop
@@ -112,7 +111,13 @@ export const QuantumWelcomeVideoSection: React.FC<QuantumWelcomeVideoSectionProp
             controls={false}
             preload="metadata"
             className="w-full h-full object-cover"
-          />
+            aria-label="Quantum Transformation Engine Overview Video"
+          >
+            <source src="/assets/videos/welcome.mp4" type="video/mp4" />
+            <p className="p-4 text-xs font-mono text-slate-400">
+              Your browser does not support HTML video playback.
+            </p>
+          </video>
 
           {/* Subtle Ambient Vignette Overlay */}
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/40 via-transparent to-black/20" />

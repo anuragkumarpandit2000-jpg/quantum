@@ -37,16 +37,24 @@ export const LandingNavbar: React.FC = () => {
     }
   }, [drawerOpen]);
 
-  const navLinks = [
+  interface NavLinkItem {
+    label: string;
+    href: string;
+    sub: string;
+    highlight?: boolean;
+    live?: boolean;
+  }
+
+  const navLinks: NavLinkItem[] = [
     { label: "ABOUT", href: "/about", sub: "FULL SYSTEM SPECIFICATION", highlight: true },
     { label: "01 • SYSTEM", href: "/#what-is-quantum", sub: "OPERATING PHILOSOPHY" },
     { label: "02 • 90-DAY ARC", href: "/#winter-arc", sub: "CHALLENGE BLUEPRINT" },
-    { label: "03 • TRANSFORMATION", href: "/#transformation", sub: "REAL VISUAL PROOFS" },
-    { label: "04 • REVIEWS", href: "/#reviews", sub: "COMMUNITY RATINGS & FEEDBACK" },
-    { label: "05 • PROOFS", href: "/#proof-feed", sub: "LIVE EXECUTION TELEMETRY", live: true },
+    { label: "03 • BADGES", href: "/#sovereign-badges", sub: "DISCIPLINE MILESTONES" },
+    { label: "04 • TRANSFORMATION", href: "/#transformation", sub: "BENCHMARK PROGRESSION" },
+    { label: "05 • REVIEWS", href: "/#reviews", sub: "COMMUNITY RATINGS & FEEDBACK" },
     { label: "06 • MOBILE", href: "/#mobile", sub: "CROSS-PLATFORM COMMAND" },
     { label: "07 • SUPPORT", href: "/#about-support", sub: "COMMUNITY PATRON PORTAL" },
-    { label: "08 • FAQ", href: "/#faq", sub: "PROTOCOL QUESTIONS" },
+    { label: "08 • FAQ", href: "/#faq", sub: "FREQUENTLY ASKED QUESTIONS" },
   ];
 
   return (
@@ -155,7 +163,7 @@ export const LandingNavbar: React.FC = () => {
               className="font-mono text-xs gap-1.5 shadow-[0_0_15px_rgba(56,189,248,0.25)]"
             >
               <Link href="/signup">
-                <span>START ARC</span>
+                <span>Start Day 1</span>
                 <ArrowRight size={13} />
               </Link>
             </Button>
@@ -164,7 +172,7 @@ export const LandingNavbar: React.FC = () => {
       </nav>
 
       {/* ====================================================================
-          QUANTUM NAVIGATION DRAWER (Full Slide-In Menu with all 11 destinations)
+          QUANTUM NAVIGATION DRAWER (Full Slide-In Menu)
           ==================================================================== */}
       {/* Backdrop Overlay */}
       <div
@@ -202,7 +210,7 @@ export const LandingNavbar: React.FC = () => {
               <div className="font-extrabold text-sm tracking-wider text-white font-sans">
                 QUANTUM SYSTEM
               </div>
-              <div className="text-[10px] font-mono text-sky-400">NAVIGATION CONSOLE</div>
+              <div className="text-[10px] font-mono text-sky-400">NAVIGATION MENU</div>
             </div>
           </div>
 
@@ -219,7 +227,7 @@ export const LandingNavbar: React.FC = () => {
         {/* Drawer Scrollable Navigation Links */}
         <div className="p-6 space-y-2 overflow-y-auto flex-1 font-mono">
           <div className="text-[10px] text-slate-500 tracking-widest uppercase font-bold mb-3 px-2">
-            PROTOCOL SECTIONS
+            SECTIONS
           </div>
 
           {navLinks.map((link) => (
@@ -279,15 +287,15 @@ export const LandingNavbar: React.FC = () => {
                 href="/signup"
                 onClick={() => setDrawerOpen(false)}
               >
-                <span>START ARC</span>
+                <span>Start Day 1</span>
                 <ArrowRight size={13} className="ml-1" />
               </Link>
             </Button>
           </div>
 
           <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1">
-            <span>92-DAY PROTOCOL ACTIVE</span>
-            <span className="text-emerald-400 font-bold">1 OCT – 31 DEC</span>
+            <span>92-DAY GLOBAL WINDOW</span>
+            <span className="text-emerald-400 font-bold">ROLLING 90-DAY ARCS</span>
           </div>
         </div>
       </aside>

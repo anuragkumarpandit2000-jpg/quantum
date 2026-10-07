@@ -26,18 +26,18 @@ export const SovereignBadgesShowcase: React.FC = () => {
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/15 via-purple-500/15 to-sky-500/15 border border-amber-400/40 text-amber-300 font-mono text-xs tracking-[0.25em] uppercase shadow-[0_0_20px_rgba(251,191,36,0.25)]">
             <Sparkles size={13} className="text-amber-400 animate-pulse" />
-            <span>SOVEREIGN SCARCITY HIERARCHY</span>
+            <span>DISCIPLINE MILESTONES & BADGES</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
-            IMMUTABLE PROOF OF{" "}
+            AUTHENTIC PROOF OF{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-purple-400 to-sky-400">
-              SUPREMACY
+              DISCIPLINE
             </span>
           </h2>
 
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed font-sans">
-            In Quantum, prestige is strictly finite. Badges cannot be bought, gifted, or inflated. They are minted in limited cohorts for the earliest and most disciplined challengers who break physical and mental friction.
+            In Quantum, prestige cannot be bought. Milestone badges are unlocked through genuine daily habit consistency and authenticated XP. Patron supporter cards are separate appreciation tokens with zero rank or XP benefits.
           </p>
         </div>
 
@@ -104,16 +104,16 @@ export const SovereignBadgesShowcase: React.FC = () => {
               <ShieldAlert size={20} />
             </div>
             <div>
-              <span className="text-white font-bold block sm:inline">FIRST-COME, FIRST-VERIFIED PROTOCOL: </span>
-              Milestone badges are awarded sequentially in real time. Once the 10th slot for Level 10, 50th for Level 9, or 100th for Level 5 is claimed, no more badges will ever be issued.
+              <span className="text-white font-bold block sm:inline">VERIFIED MILESTONE ALLOCATION: </span>
+              Milestone badges are awarded automatically upon reaching target streak and XP thresholds. Once cohort limits are filled, higher tiers require ascending to next level ranks.
             </div>
           </div>
 
           <a
-            href="/about#sovereign-badges"
+            href="/about"
             className="shrink-0 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/30 flex items-center gap-1.5 transition-colors"
           >
-            <span>LEARN SPECIFICATION</span>
+            <span>VIEW FULL MILESTONE RULES</span>
             <ArrowUpRight size={14} />
           </a>
         </div>

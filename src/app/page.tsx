@@ -103,9 +103,15 @@ export default function LandingPage() {
 
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/50 border border-emerald-500/40 text-emerald-400 text-xs font-mono tracking-wider backdrop-blur-md shadow-[0_0_20px_rgba(16,185,129,0.2)]">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{liveTelemetry.totalChallengers.toLocaleString()} CHALLENGERS</span>
-              <span className="text-slate-600">•</span>
-              <span className="text-cyan-300 font-bold">{liveTelemetry.liveNow} ONLINE LIVE NOW</span>
+              {liveTelemetry.totalChallengers < 50 ? (
+                <span>Founding cohort: {Math.max(1, liveTelemetry.totalChallengers)} of 100 spots claimed</span>
+              ) : (
+                <>
+                  <span>{liveTelemetry.totalChallengers.toLocaleString()} {liveTelemetry.totalChallengers === 1 ? "CHALLENGER" : "CHALLENGERS"}</span>
+                  <span className="text-slate-600">•</span>
+                  <span className="text-cyan-300 font-bold">{liveTelemetry.liveNow} ONLINE LIVE NOW</span>
+                </>
+              )}
             </div>
           </div>
 
@@ -132,13 +138,19 @@ export default function LandingPage() {
           </div>
 
           <p className="max-w-2xl text-slate-300 text-sm sm:text-base leading-relaxed font-sans font-normal px-4">
-            The definitive personal transformation architecture. Execute your 90-day habit matrix, earn verifiable XP, decompose complex skills, and build unwavering mental armour alongside fellow challengers.
+            The definitive personal transformation system. Execute your 90-day habit matrix, earn authentic XP, decompose complex skills into daily micro-tasks, and build sustained mental grit.
           </p>
 
+          {/* Optional Hinglish Line */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-[11px] font-mono text-slate-400">
+            <span className="text-sky-400 font-bold">🇮🇳 Focus:</span>
+            <span>90 din ka focused discipline. No excuses, sirf daily execution.</span>
+          </div>
+
           {/* CTAs */}
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <LiquidButton href="/signup" size="xl" className="shadow-2xl">
-              <span>START YOUR JOURNEY</span>
+              <span>Start Day 1</span>
               <ArrowRight size={18} className="text-sky-300 ml-1" />
             </LiquidButton>
 
@@ -149,12 +161,14 @@ export default function LandingPage() {
             </Button>
           </div>
 
-          {/* Award Badge integration with 3D tilt */}
-          <div className="pt-6">
-            <QuantumTiltCard maxTilt={5} liftDistance={6} className="p-3 inline-block">
-              <AwardBadge type="winter-arc-first" place={1} link="#sovereign-badges" />
-            </QuantumTiltCard>
-          </div>
+          {/* Award Badge integration - Shown when cohort exceeds threshold */}
+          {liveTelemetry.totalChallengers >= 50 && (
+            <div className="pt-6">
+              <QuantumTiltCard maxTilt={5} liftDistance={6} className="p-3 inline-block">
+                <AwardBadge type="winter-arc-first" place={1} link="#sovereign-badges" />
+              </QuantumTiltCard>
+            </div>
+          )}
         </div>
 
         {/* Scroll indicator */}
@@ -304,7 +318,7 @@ export default function LandingPage() {
       <SovereignBadgesShowcase />
 
       {/* ============================================================
-          04 — TRANSFORMATION SECTION
+          04 — TRANSFORMATION SECTION (SAMPLE BENCHMARK)
           ============================================================ */}
       <section id="transformation" className="py-24 px-6 relative border-t border-slate-900/60 bg-transparent">
         {/* Subtle radial ambient blue lighting */}
@@ -314,17 +328,17 @@ export default function LandingPage() {
           <div className="text-center space-y-3 max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300 font-mono text-[11px] tracking-widest uppercase">
               <Activity size={12} className="text-sky-400" />
-              03 — Visual Proof Story
+              04 — Sample Benchmark Progression
             </div>
             <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
-              VISUAL ARC TRANSFORMATION
+              SAMPLE TRANSFORMATION BENCHMARK
             </h2>
             <p className="text-slate-400 text-sm leading-relaxed font-sans">
-              Real results require relentless daily consistency. Inspect the documented 90-day physical transformation journey of Amit under the Quantum Winter Arc regimen.
+              Real results require daily consistency. Inspect this documented 90-day physical transformation benchmark case under the Quantum Winter Arc regimen.
             </p>
           </div>
 
-          {/* Side-by-Side: Compact Fitted Image Frame (Left) + 4.5 Rating, Live Status & Days Left (Right) */}
+          {/* Side-by-Side: Compact Fitted Image Frame (Left) + Status & Days Left (Right) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* LEFT: Compact Fitted Before/After Frame */}
             <div className="lg:col-span-5 flex justify-center w-full">
@@ -337,12 +351,12 @@ export default function LandingPage() {
                 <div className="flex items-center justify-between px-2 py-1.5 border-b border-slate-800/80 font-mono text-[10px] text-slate-400 mb-2.5">
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-slate-200 font-bold">VERIFIED LOG</span>
+                    <span className="text-slate-200 font-bold">SAMPLE CASE</span>
                     <span className="text-slate-500">•</span>
-                    <span className="text-sky-400">AMIT</span>
+                    <span className="text-sky-400">AMIT (BENCHMARK)</span>
                   </div>
                   <div className="text-slate-400 text-[9px] tracking-wider">
-                    88/90 DAYS [97.8%]
+                    TARGET: 90 DAYS
                   </div>
                 </div>
 
@@ -351,8 +365,8 @@ export default function LandingPage() {
                   <ImageComparison
                     beforeImage="/assets/images/transformation_before.png"
                     afterImage="/assets/images/transformation_after.png"
-                    altBefore="Amit Day 01 Starting Physique (Skinny)"
-                    altAfter="Amit After 90 Days (Muscular Transformation)"
+                    altBefore="Amit Day 01 Starting Physique (Sample)"
+                    altAfter="Amit After 90 Days (Sample Transformation)"
                     labelBefore="DAY 01 • 61 KG"
                     labelAfter="DAY 90 • 74 KG"
                     className="w-full"
@@ -365,7 +379,7 @@ export default function LandingPage() {
                     CALISTHENICS & HYPERTROPHY
                   </span>
                   <span className="text-sky-400 font-bold">
-                    WINTER ARC APEX
+                    SAMPLE TARGET
                   </span>
                 </div>
               </QuantumTiltCard>
@@ -390,7 +404,7 @@ export default function LandingPage() {
                     </span>
                   </div>
                   <div className="font-mono text-[10px] text-sky-400 bg-sky-950/60 px-2.5 py-0.5 rounded-full border border-sky-500/30 font-bold tracking-widest">
-                    ACTIVE PROTOCOL COHORT
+                    ACTIVE COHORT
                   </div>
                 </div>
 
@@ -400,7 +414,7 @@ export default function LandingPage() {
                 {/* 3. Direct Action Link */}
                 <div className="pt-1 flex items-center gap-3">
                   <LiquidButton href="/signup" size="lg" className="w-full shadow-xl">
-                    <span>LOCK INTO THE WINTER ARC</span>
+                    <span>Start Day 1</span>
                     <ArrowRight size={16} className="text-sky-300 ml-1.5" />
                   </LiquidButton>
                 </div>
@@ -409,13 +423,13 @@ export default function LandingPage() {
           </div>
 
           <div className="text-center text-[11px] font-mono text-slate-500 max-w-xl mx-auto">
-            * Verified photographic evidence shared with explicit challenger consent. Progress attained through progressive calisthenics, caloric discipline, and 90 unbroken days of logged effort.
+            * Sample benchmark illustration of target 90-day physical progression attained through progressive calisthenics, caloric discipline, and unbroken daily logged effort.
           </div>
         </div>
       </section>
 
       {/* ============================================================
-          05 — COMMUNITY & QUANTUM VANGUARD
+          05 — COMMUNITY & COHORT
           ============================================================ */}
       <section className="py-24 px-6 relative border-t border-slate-900/60 bg-transparent">
         {/* Soft radial blue lighting */}
@@ -426,7 +440,7 @@ export default function LandingPage() {
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300 font-mono text-[11px] tracking-widest uppercase">
                 <Shield size={12} className="text-sky-400" />
-                04 — Collective Momentum
+                05 — Collective Momentum
               </div>
               <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
                 THE QUANTUM VANGUARD
@@ -442,28 +456,15 @@ export default function LandingPage() {
               liftDistance={6}
               className="flex items-center gap-3 px-4 py-3 shadow-lg"
             >
-              <div className="flex -space-x-3 shrink-0">
-                {[1, 2, 3, 4].map((id) => (
-                  <div
-                    key={id}
-                    className="relative w-10 h-10 rounded-full border-2 border-sky-400/50 overflow-hidden shrink-0 aspect-square shadow-[0_0_10px_rgba(56,189,248,0.3)] bg-slate-900"
-                  >
-                    <Image
-                      src="/assets/images/avatars/default_avatar.svg"
-                      alt={`Challenger ${id}`}
-                      fill
-                      sizes="40px"
-                      className="rounded-full object-cover object-center p-1"
-                    />
-                  </div>
-                ))}
+              <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0 shadow-[0_0_10px_rgba(56,189,248,0.25)]">
+                <Shield size={20} />
               </div>
               <div className="text-xs font-mono">
                 <div className="font-bold text-white flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  ACTIVE PROTOCOL SQUAD
+                  FOUNDING COHORT ACTIVE
                 </div>
-                <div className="text-[10px] text-sky-400">VERIFIED DISCIPLINE COHORT</div>
+                <div className="text-[10px] text-sky-400">SQUAD FORMATION IN PROGRESS</div>
               </div>
             </QuantumTiltCard>
           </div>
@@ -473,29 +474,29 @@ export default function LandingPage() {
             <QuantumTiltCard className="p-6 space-y-2 group">
               <div className="text-[10px] text-sky-400 tracking-widest uppercase font-bold">PARAM 01 • DURATION</div>
               <div className="text-3xl sm:text-5xl font-extrabold text-white group-hover:text-sky-300 transition-colors">90</div>
-              <div className="text-xs text-slate-300 font-bold uppercase tracking-wide">PROTOCOL DAYS</div>
-              <div className="text-[10px] text-slate-500 font-sans">Continuous Winter Arc horizon without restart buffers.</div>
+              <div className="text-xs text-slate-300 font-bold uppercase tracking-wide">DAYS HORIZON</div>
+              <div className="text-[10px] text-slate-500 font-sans">92-day global window with rolling 90-day personal arcs.</div>
             </QuantumTiltCard>
 
             <QuantumTiltCard className="p-6 space-y-2 group">
               <div className="text-[10px] text-cyan-400 tracking-widest uppercase font-bold">PARAM 02 • TARGET XP</div>
               <div className="text-3xl sm:text-5xl font-extrabold text-cyan-300 group-hover:text-cyan-200 transition-colors">10,000</div>
               <div className="text-xs text-slate-300 font-bold uppercase tracking-wide">TARGET ARC XP</div>
-              <div className="text-[10px] text-slate-500 font-sans">Attained purely through authenticated habits & skill tasks.</div>
+              <div className="text-[10px] text-slate-500 font-sans">+50 XP per completed habit & verified skill micro-task.</div>
             </QuantumTiltCard>
 
             <QuantumTiltCard className="p-6 space-y-2 group">
-              <div className="text-[10px] text-sky-400 tracking-widest uppercase font-bold">PARAM 03 • INTEGRITY</div>
+              <div className="text-[10px] text-sky-400 tracking-widest uppercase font-bold">PARAM 03 • STORAGE</div>
               <div className="text-3xl sm:text-5xl font-extrabold text-white group-hover:text-sky-300 transition-colors">100%</div>
-              <div className="text-xs text-slate-300 font-bold uppercase tracking-wide">RELATIONAL STORAGE</div>
-              <div className="text-[10px] text-slate-500 font-sans">Immutable database persistence. Zero loss of progress logs.</div>
+              <div className="text-xs text-slate-300 font-bold uppercase tracking-wide">PERSISTENT STORAGE</div>
+              <div className="text-[10px] text-slate-500 font-sans">Relational cloud database. Zero progress loss.</div>
             </QuantumTiltCard>
 
             <QuantumTiltCard className="p-6 space-y-2 group">
               <div className="text-[10px] text-sky-400 tracking-widest uppercase font-bold">PARAM 04 • VANITY</div>
               <div className="text-3xl sm:text-5xl font-extrabold text-sky-400 group-hover:text-sky-300 transition-colors">0.0</div>
               <div className="text-xs text-slate-300 font-bold uppercase tracking-wide">VANITY TOLERANCE</div>
-              <div className="text-[10px] text-slate-500 font-sans">Zero synthetic score inflation. Only real effort is credited.</div>
+              <div className="text-[10px] text-slate-500 font-sans">Zero fake score inflation. Only real effort is credited.</div>
             </QuantumTiltCard>
           </div>
         </div>
@@ -582,20 +583,81 @@ export default function LandingPage() {
       </section>
 
       {/* ============================================================
-          08 — QUANTUM MOBILE: COMPLETE MOBILE EXPERIENCE SHOWCASE
+          06 — QUANTUM MOBILE: COMPLETE MOBILE EXPERIENCE SHOWCASE
           ============================================================ */}
       <QuantumMobileExperience />
 
+      {/* ============================================================
+          07 — FOUNDER NOTE & COMMUNITY SUPPORT ("WHY I BUILT THIS")
+          ============================================================ */}
+      <section id="about-support" className="py-24 px-6 relative border-t border-slate-900/60 bg-transparent">
+        <div className="max-w-4xl mx-auto space-y-10">
+          <div className="text-center space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300 font-mono text-[11px] tracking-widest uppercase">
+              <UserIcon size={12} className="text-sky-400" />
+              07 — Founder Perspective & Support
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
+              WHY I BUILT QUANTUM
+            </h2>
+          </div>
 
+          <QuantumTiltCard maxTilt={3} liftDistance={6} className="p-8 sm:p-10 space-y-6">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+              {/* Founder Photo Slot */}
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-sky-400/50 bg-slate-900 shrink-0 shadow-[0_0_25px_rgba(56,189,248,0.3)]">
+                <Image
+                  src="/assets/images/logo/logo.png"
+                  alt="Anurag Pandit - Founder of Quantum"
+                  fill
+                  sizes="120px"
+                  className="object-contain p-2"
+                />
+              </div>
+
+              <div className="space-y-3 flex-1 text-center sm:text-left">
+                <div className="space-y-0.5">
+                  <h3 className="text-xl font-bold text-white">Anurag Pandit</h3>
+                  <p className="text-xs font-mono text-sky-400">Founder & Lead Architect • QUANTUM</p>
+                </div>
+
+                <p className="text-sm text-slate-300 leading-relaxed font-sans">
+                  &ldquo;I spent years jumping between fragmented checklist apps, Notion templates, and private group chats. Every system fell apart when real friction hit. Standard habit trackers treat transformation like passive checkboxes; what we needed was a deterministic command center where daily action compounds into verified proof.
+                </p>
+
+                <p className="text-sm text-slate-300 leading-relaxed font-sans">
+                  Quantum was built for the Winter Arc: 90 unbroken days where excuses vanish and focus becomes non-negotiable. No artificial vanity scores, no paid shortcuts—just authentic effort logged every single day.&rdquo;
+                </p>
+
+                {/* Voluntary Patron Note */}
+                <div className="pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 font-mono text-xs text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <span className="text-amber-400">👑</span>
+                    <span>Support independent hosting:</span>
+                    <span className="text-sky-300 select-all font-bold">anuragkumar.pandit2000@okicici</span>
+                  </div>
+
+                  <Link
+                    href="/refund"
+                    className="text-slate-500 hover:text-sky-300 text-[11px] underline"
+                  >
+                    Donation & Patron Policy
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </QuantumTiltCard>
+        </div>
+      </section>
 
       {/* ============================================================
-          10 — FREQUENTLY ASKED QUESTIONS
+          08 — FREQUENTLY ASKED QUESTIONS
           ============================================================ */}
       <section id="faq" className="py-24 px-6 relative border-t border-slate-900/60 bg-transparent">
         <div className="max-w-4xl mx-auto space-y-10">
           <div className="text-center space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300 font-mono text-[11px] tracking-widest uppercase">
-              08 — Tactical Inquiries
+              08 — Frequently Asked Questions
             </div>
             <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
               FREQUENTLY ASKED QUESTIONS
@@ -605,24 +667,24 @@ export default function LandingPage() {
           <div className="space-y-3">
             {[
               {
-                q: "What exactly is the Winter Arc 90-day challenge?",
-                a: "The Winter Arc is a rigorous 90-day transformation challenge during the final quarter/winter months. Challengers eliminate distractions, lock into non-negotiable daily habits (fitness, deep study, mental clarity), and build immutable personal momentum.",
+                q: "What is the timeline: 92 days vs 90 days?",
+                a: "The global Winter Arc window spans 92 days (1 October to 31 December). Each challenger commits to a 90-day personal arc. If you join after 1 October, your personal 90-day counter begins on your Day 1.",
+              },
+              {
+                q: "When does each day reset?",
+                a: "Days reset strictly at local midnight (Indian Standard Time / IST by default). Log your habits before 23:59 to preserve streak integrity.",
               },
               {
                 q: "How does the 90-Day Habit Matrix work?",
-                a: "Each habit you define has 90 individual day boxes (Day 01 → Day 90). Clicking a day marks it Completed (✓) and grants +50 XP. Double-clicking marks it Missed (✕). You can scroll horizontally to inspect your full arc trajectory anytime.",
+                a: "Each habit displays a 90-day horizontal grid. Clicking a box marks it completed and awards +50 XP. Double-clicking marks it missed. You need an 80% completion rate (maximum 18 misses across the 90 days) to qualify for the completion certificate.",
               },
               {
-                q: "Is Quantum completely free?",
-                a: "Yes. All core systems—the Habit Matrix, XP Engine, Skills Decomposer, Proof Gallery, Calendar, and Quantum Core AI—are free to use without paywalls.",
+                q: "Is Quantum free to use?",
+                a: "Yes, completely free. All core systems—Habit Matrix, XP Engine, Skill Decomposer, Proof Gallery, 3D Calendar, and Quantum Core AI—have zero paywalls. Patron donations are voluntary goodwill contributions.",
               },
               {
-                q: "What is the Commitment Certificate?",
-                a: "Immediately following onboarding, the system generates an official high-resolution, serial-stamped Winter Arc Commitment Certificate that you can download, print, and hang above your workstation.",
-              },
-              {
-                q: "How does the leaderboard ranking work?",
-                a: "The leaderboard ranks users on real verified XP and streak milestones stored in the database. There are no fabricated participants.",
+                q: "Can badges or XP be bought?",
+                a: "No. Badges and XP can never be bought or transferred. Royal Patron cards are purely non-ranking appreciation tokens acknowledging community server contributions.",
               },
             ].map((faq, i) => (
               <QuantumTiltCard
@@ -647,19 +709,19 @@ export default function LandingPage() {
       </section>
 
       {/* ============================================================
-          11 — PROTOCOL GENESIS
+          09 — THE PHILOSOPHY
           ============================================================ */}
       <section className="py-20 px-6 relative border-t border-slate-900/60 bg-transparent">
         <div className="max-w-4xl mx-auto">
           <QuantumTiltCard maxTilt={3} liftDistance={6} className="p-8 sm:p-12 space-y-6 text-center font-mono">
             <div className="text-xs text-sky-400 tracking-[0.3em] uppercase">
-              09 — The Protocol Genesis
+              09 — The Philosophy
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-sans">
-              ENGINEERED FOR THE UNCOMPROMISING
+              ENGINEERED FOR DISCIPLINE
             </h2>
             <p className="text-slate-400 text-sm leading-relaxed font-sans max-w-2xl mx-auto">
-              Quantum was built out of necessity. In an era of infinite distraction and cheap dopamine, the Winter Arc is a line drawn in the sand. 90 days of deliberate focus, relentless physical and mental exertion, and scientific accountability.
+              Quantum was built out of necessity. In an era of infinite distraction and cheap dopamine, the Winter Arc is a line drawn in the sand. 90 days of deliberate focus, physical exertion, and honest accountability.
             </p>
             <div className="w-16 h-px bg-sky-500/40 mx-auto" />
             <div className="text-xs text-slate-500 tracking-widest">
@@ -670,7 +732,7 @@ export default function LandingPage() {
       </section>
 
       {/* ============================================================
-          12 — FINAL CTA (CINEMATIC CONCLUSION)
+          10 — FINAL CALL TO ACTION
           ============================================================ */}
       <section className="py-28 px-6 relative border-t border-slate-900/60 bg-gradient-to-b from-transparent via-[#02050e]/60 to-[#010308]/90 text-center overflow-hidden">
         {/* Soft radial blue spotlight behind shield */}
@@ -694,13 +756,13 @@ export default function LandingPage() {
                 YOUR WINTER ARC AWAITS.
               </h2>
               <p className="text-slate-300 text-sm sm:text-base font-sans leading-relaxed max-w-xl mx-auto">
-                Do not let another year slip away in comfortable hesitation. Enter the Quantum portal, pledge your 90 days, and claim your transformation.
+                Do not let another year slip away in comfortable hesitation. Enter Quantum, pledge your 90 days, and build your transformation.
               </p>
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
               <LiquidButton href="/signup" size="xxl" className="shadow-2xl">
-                <span>COMMENCE 90-DAY INDUCTION</span>
+                <span>Start Day 1</span>
                 <ArrowRight size={20} className="text-sky-300 ml-1" />
               </LiquidButton>
 
@@ -713,8 +775,6 @@ export default function LandingPage() {
           </QuantumTiltCard>
         </div>
       </section>
-
-
 
       <LandingFooter />
     </div>

@@ -492,74 +492,85 @@ export const ExperiencesReviewSection: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
             {/* Left: Star Score & Dynamic Votes Display */}
             <div className="md:col-span-6 space-y-4 border-b md:border-b-0 md:border-r border-slate-800/80 pb-6 md:pb-0 md:pr-8">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
-                <span className="text-[11px] font-mono tracking-widest text-amber-300 uppercase font-semibold">
-                  LIVE COMMUNITY SCORE
-                </span>
-                <span className="text-slate-600">•</span>
-                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-500/30">
-                  REAL-TIME CALCULATION
-                </span>
-              </div>
+              {totalVotes < 10 ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse" />
+                    <span className="text-[11px] font-mono tracking-widest text-sky-300 uppercase font-semibold">
+                      FOUNDING COHORT FEEDBACK
+                    </span>
+                  </div>
 
-              {/* Big Star Score + Stars */}
-              <div className="flex items-baseline gap-4 flex-wrap">
-                <div className="text-5xl sm:text-6xl font-black font-mono tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-200 to-sky-300">
-                  {averageRating.toFixed(1)}
-                </div>
-                <div className="space-y-1">
-                  {/* Visual 5 Stars filled according to average rating */}
-                  <div className="flex items-center text-amber-400 text-2xl drop-shadow-[0_0_12px_rgba(251,191,36,0.65)]">
-                    {[1, 2, 3, 4, 5].map((starIdx) => {
-                      const fillPercentage = Math.max(
-                        0,
-                        Math.min(100, (averageRating - (starIdx - 1)) * 100)
-                      );
-                      return (
-                        <div key={starIdx} className="relative inline-block mr-1">
-                          <span className="text-slate-800">★</span>
-                          <span
-                            className="absolute top-0 left-0 overflow-hidden text-amber-400"
-                            style={{ width: `${fillPercentage}%` }}
-                          >
-                            ★
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-white font-sans">
+                    Community Reviews & Rating
+                  </h3>
+
+                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-sans">
+                    Public star average unlocks once the founding cohort logs 10 verified ratings. Tap any star on the right to register your rating live.
+                  </p>
+
+                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-4 font-mono">
+                    <div className="flex items-center gap-2.5">
+                      <Shield size={16} className="text-sky-400 shrink-0" />
+                      <div>
+                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <span>Founding Reviews:</span>
+                          <span className="text-sky-300 px-2 py-0.5 rounded bg-sky-500/20 border border-sky-400/40 font-mono font-extrabold text-sm">
+                            {totalVotes} of 10
                           </span>
                         </div>
-                      );
-                    })}
-                  </div>
-                  <div className="text-xs font-mono text-slate-400">
-                    Out of 5.0 Global Rating
-                  </div>
-                </div>
-              </div>
-
-              {/* Dynamic Votes Count Display */}
-              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-4 font-mono">
-                <div className="flex items-center gap-2.5">
-                  <Shield size={16} className="text-sky-400 shrink-0" />
-                  <div>
-                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <span>Total Votes:</span>
-                      <span className="text-sky-300 px-2 py-0.5 rounded bg-sky-500/20 border border-sky-400/40 font-mono font-extrabold text-sm">
-                        {totalVotes.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-slate-400">
-                      {totalVotes === 1
-                        ? "1 Vote (Admin Verified Baseline)"
-                        : `${totalVotes} verified community votes recorded`}
+                        <div className="text-[10px] text-slate-400">
+                          {10 - Math.min(totalVotes, 10)} more needed to display public average
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                {patronsCount > 0 && (
-                  <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-amber-300 bg-amber-950/40 px-2.5 py-1 rounded-lg border border-amber-500/30">
-                    <span>👑 {patronsCount} Patrons</span>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+                    <span className="text-[11px] font-mono tracking-widest text-amber-300 uppercase font-semibold">
+                      LIVE COMMUNITY SCORE
+                    </span>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-500/30">
+                      REAL-TIME CALCULATION
+                    </span>
                   </div>
-                )}
-              </div>
+
+                  {/* Big Star Score + Stars */}
+                  <div className="flex items-baseline gap-4 flex-wrap">
+                    <div className="text-5xl sm:text-6xl font-black font-mono tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-200 to-sky-300">
+                      {averageRating.toFixed(1)}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center text-amber-400 text-2xl drop-shadow-[0_0_12px_rgba(251,191,36,0.65)]">
+                        {[1, 2, 3, 4, 5].map((starIdx) => {
+                          const fillPercentage = Math.max(
+                            0,
+                            Math.min(100, (averageRating - (starIdx - 1)) * 100)
+                          );
+                          return (
+                            <div key={starIdx} className="relative inline-block mr-1">
+                              <span className="text-slate-800">★</span>
+                              <span
+                                className="absolute top-0 left-0 overflow-hidden text-amber-400"
+                                style={{ width: `${fillPercentage}%` }}
+                              >
+                                ★
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="text-xs font-mono text-slate-400">
+                        Out of 5.0 Global Rating ({totalVotes} reviews)
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Right: Instant 1-Click Interactive Star Voting */}
@@ -620,7 +631,7 @@ export const ExperiencesReviewSection: React.FC = () => {
                   className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-mono font-extrabold text-xs flex items-center justify-center gap-1.5 transition shadow-[0_0_25px_rgba(251,191,36,0.4)] group"
                 >
                   <span className="text-sm">👑</span>
-                  <span>Donate & Get Royal Card</span>
+                  <span>Support Project (Patron)</span>
                 </button>
               </div>
             </div>
@@ -736,7 +747,7 @@ export const ExperiencesReviewSection: React.FC = () => {
           <div className="space-y-8 animate-in fade-in duration-500">
             {/* Filter & Live Search Bar */}
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-b border-slate-900 pb-5">
-              {/* Category Filter Pills */}
+              {/* Category Filter Pills (Hide empty tabs) */}
               <div className="flex flex-wrap gap-2 font-mono text-xs">
                 {[
                   { id: "all", label: "All Feedback", count: reviews.length },
@@ -771,7 +782,7 @@ export const ExperiencesReviewSection: React.FC = () => {
                     label: "Vanguard",
                     count: reviews.filter((r) => r.category === "Vanguard").length,
                   },
-                ].map((cat) => (
+                ].filter((cat) => cat.id === "all" || cat.count > 0).map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}

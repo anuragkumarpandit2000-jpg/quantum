@@ -69,15 +69,15 @@ const SPEC_PILLARS: SpecPillar[] = [
     icon: Shield,
     accentColor: "from-sky-400 to-blue-500",
     specs: [
-      { label: "Architecture", value: "Next.js 14 App Router" },
-      { label: "State Sync", value: "Optimistic UI + Webhooks" },
-      { label: "Theme", value: "Deep Obsidian (#030712)" },
-      { label: "Design System", value: "Glassmorphic 3D HUD" },
+      { label: "Platform", value: "Cross-Platform Web App" },
+      { label: "Data Persistence", value: "Relational Cloud Sync" },
+      { label: "Security", value: "Encrypted Auth & Sessions" },
+      { label: "Interface", value: "High-Contrast Dark Theme" },
     ],
     highlights: [
-      "Zero-latency distributed state architecture",
-      "Unified interface across desktop, tablet, and mobile",
-      "Elimination of cognitive overhead and vanity vanity metrics",
+      "Fast responsive interface across desktop, tablet, and mobile",
+      "Unified command center for habits, AI coaching, and proof gallery",
+      "Elimination of cognitive overhead and vanity metrics",
     ],
   },
 
@@ -88,7 +88,7 @@ const SPEC_PILLARS: SpecPillar[] = [
     category: "core",
     categoryLabel: "CORE ARCHITECTURE",
     title: "THE SYSTEM",
-    subtitle: "Deterministic Behavioral Cybernetic Engine",
+    subtitle: "Deterministic Behavioral Habit Engine",
     description:
       "Motivation is a fleeting, volatile biological impulse. The System converts raw personal ambition into deterministic daily routines, closed feedback loops, and verifiable progression milestones that function independently of mood.",
     icon: Layers,
@@ -96,12 +96,12 @@ const SPEC_PILLARS: SpecPillar[] = [
     specs: [
       { label: "Input", value: "High-Conviction Targets" },
       { label: "Processing", value: "Matrix Scheduling Grid" },
-      { label: "Feedback", value: "Dual Daily Audit Loops" },
+      { label: "Feedback", value: "Dual Daily Checkpoints" },
       { label: "Output", value: "Exponential Compounding" },
     ],
     highlights: [
       "Eliminates decision fatigue through pre-scheduled routines",
-      "Deterministic execution loops immune to emotional resistance",
+      "Structured execution loops that minimize emotional friction",
       "Automated friction checks and momentum recalculation",
     ],
   },
@@ -115,20 +115,20 @@ const SPEC_PILLARS: SpecPillar[] = [
     title: "90-DAY TRANSFORMATION",
     subtitle: "The 2,160-Hour Winter Arc Metamorphosis Protocol",
     description:
-      "90 consecutive days represent the exact biological and psychological horizon required to hardwire neurobiological habit loops, strip away digital static, and physically recompose mental armour.",
+      "90 consecutive days represent the exact biological and psychological horizon required to hardwire neurobiological habit loops, strip away digital static, and physically recompose mental armour. A 92-day global window (1 Oct – 31 Dec) hosts rolling 90-day personal arcs for challengers joining at any point.",
     icon: Flame,
     accentColor: "from-amber-400 to-rose-500",
     specs: [
       { label: "Total Duration", value: "90 Days (2,160 Hours)" },
-      { label: "Phases", value: "4 Distinct Regimen Phases" },
-      { label: "Audit Window", value: "Strict 24-Hour Rolling UTC" },
-      { label: "Failure Protocol", value: "Zero Reset / Audit Trial" },
+      { label: "Global Window", value: "92 Days (1 Oct – 31 Dec)" },
+      { label: "Day Cutoff", value: "Local Midnight (IST)" },
+      { label: "Pass Threshold", value: "80% Consistency (Max 18 Misses)" },
     ],
     highlights: [
-      "Phase 01: Dopamine Detox & System Shock (Days 01–20)",
+      "Phase 01: Dopamine Detox & Habit Shock (Days 01–20)",
       "Phase 02: Silent Compounding Discipline (Days 21–50)",
       "Phase 03: Physical & Skill Apex Velocity (Days 51–75)",
-      "Phase 04: Permanent Identity Ascendance (Days 76–90)",
+      "Phase 04: Permanent Identity Transformation (Days 76–90)",
     ],
   },
 
@@ -189,21 +189,21 @@ const SPEC_PILLARS: SpecPillar[] = [
     category: "execution",
     categoryLabel: "EXECUTION PROTOCOL",
     title: "DAILY EXECUTION",
-    subtitle: "Morning Protocol Initialization & Evening Reckoning",
+    subtitle: "Morning Protocol Alignment & Evening Review",
     description:
-      "Every day is partitioned into two mission-critical checkpoints: 06:00 Morning Protocol Priming to align focus, and 21:00 Evening Reckoning where all completed work must be recorded before midnight.",
+      "Every day is partitioned into two checkpoints: Morning intent alignment to set non-negotiable daily habits, and Evening Review where completed actions are logged before local midnight.",
     icon: Zap,
     accentColor: "from-cyan-400 to-emerald-400",
     specs: [
       { label: "Cadence", value: "Dual Daily Checkpoints" },
-      { label: "Cutoff", value: "23:59:59 Daily Lockdown" },
+      { label: "Cutoff", value: "Local Midnight (23:59 IST)" },
       { label: "Logging", value: "Metrics, Proof, Time-Spent" },
-      { label: "Lockout", value: "Immutable Day Archival" },
+      { label: "Lockout", value: "Daily Streak Finalization" },
     ],
     highlights: [
       "Morning intent checklist setting non-negotiable priorities",
       "Evening review measuring delta between intent and execution",
-      "Automatic day closure locking retroactive tampering",
+      "Automatic day closure at local midnight to maintain streak honesty",
     ],
   },
 
@@ -214,21 +214,21 @@ const SPEC_PILLARS: SpecPillar[] = [
     category: "execution",
     categoryLabel: "EXECUTION PROTOCOL",
     title: "CONSISTENCY",
-    subtitle: "Streak Resilience Engine & Momentum Compounding",
+    subtitle: "Streak Engine & 80% Completion Threshold",
     description:
-      "Discipline compounds exponentially when unbroken. Quantum computes your continuous streak velocity with anti-fragile safeguards that reward sustained momentum without compromising discipline.",
+      "Discipline compounds exponentially when unbroken. Quantum computes continuous streak velocity with built-in pass thresholds: 80% consistency across the 90 days (allowing up to 18 misses maximum) to earn your official certificate.",
     icon: Activity,
     accentColor: "from-amber-400 to-orange-500",
     specs: [
-      { label: "Streak Engine", value: "Consecutive Day Hashes" },
+      { label: "Streak Engine", value: "Daily Consecutive Counter" },
       { label: "Multiplier", value: "Up to 3.0x Velocity Bonus" },
-      { label: "Threshold", value: "Minimum 80% Matrix Pass" },
-      { label: "Resilience", value: "Emergency Protocol Tokens" },
+      { label: "Threshold", value: "80% Pass Rate (Max 18 Misses)" },
+      { label: "Resilience", value: "Streak Recovery Mechanism" },
     ],
     highlights: [
       "Real-time streak flame counter with dynamic velocity tiers",
-      "Anti-burnout grace mechanisms with strict justification rules",
-      "Mathematical compounding curves displaying long-term gains",
+      "Realistic consistency buffer allowing up to 18 misses across 90 days",
+      "Mathematical compounding curves displaying long-term habit gains",
     ],
   },
 
@@ -239,21 +239,21 @@ const SPEC_PILLARS: SpecPillar[] = [
     category: "progression",
     categoryLabel: "PROGRESSION & DATA",
     title: "XP (EXPERIENCE POINTS)",
-    subtitle: "Cryptographic Gamification & Level Progression Ledger",
+    subtitle: "Gamification & Level Progression Engine",
     description:
-      "Every verified habit, skill micro-task, and community proof yields authentic Experience Points recorded into an immutable database ledger. Zero vanity counters or arbitrary progress bars.",
+      "Every verified habit, skill micro-task, and community proof yields authentic Experience Points recorded in the database. Zero arbitrary progress inflation.",
     icon: Trophy,
     accentColor: "from-yellow-400 to-amber-500",
     specs: [
-      { label: "Habit XP", value: "+10 to +25 XP / Habit" },
+      { label: "Habit XP", value: "+50 XP / Habit Completed" },
+      { label: "Target Arc XP", value: "10,000 XP Full Horizon" },
       { label: "Milestone XP", value: "+100 to +500 XP / Milestone" },
-      { label: "Level Curve", value: "Exponential Arc Progression" },
-      { label: "Storage", value: "Cryptographically Verified DB" },
+      { label: "Storage", value: "Relational Database Engine" },
     ],
     highlights: [
-      "Level Progression: Initiate → Vanguard → Sentinel → Apex",
-      "Level-up celebration overlays with sound & visual feedback",
-      "Public verifiable XP balance immune to client-side injection",
+      "Level Progression: Initiate → Disciplined → Hardened → Relentless → Centurion → Conqueror",
+      "Level-up celebrations with visual and sound feedback",
+      "Server-validated XP balance with complete transaction logging",
     ],
   },
 
@@ -295,10 +295,10 @@ const SPEC_PILLARS: SpecPillar[] = [
     icon: Award,
     accentColor: "from-amber-300 to-yellow-500",
     specs: [
-      { label: "Sync Engine", value: "Real-Time WebSocket / Polling" },
+      { label: "Sync Engine", value: "Real-Time Server Polling" },
       { label: "Tiers", value: "Podium (Top 3) • Vanguard • Cohort" },
       { label: "Timeframe Filters", value: "All-Time, 30-Day, 7-Day" },
-      { label: "Sybil Resistance", value: "Strict Account Verification" },
+      { label: "Account Check", value: "Strict Email Verification" },
     ],
     highlights: [
       "Podium honors for Top 3 challengers with custom badges",
@@ -323,7 +323,7 @@ const SPEC_PILLARS: SpecPillar[] = [
       { label: "Squad Roster", value: "4 to 12 Challengers / Squad" },
       { label: "Scoring Metric", value: "Squad Average Matrix %" },
       { label: "Telemetry", value: "Real-Time Live Heartbeat" },
-      { label: "Encrypted Logs", value: "Secure Squad Execution Room" },
+      { label: "Squad Logs", value: "Squad Execution Room" },
     ],
     highlights: [
       "Collective squad shields earned when all members hit 100%",
@@ -341,13 +341,13 @@ const SPEC_PILLARS: SpecPillar[] = [
     title: "PROOF OF TRANSFORMATION",
     subtitle: "Daily Photographic & Video Verification Feed",
     description:
-      "Do not just claim discipline—prove it with indisputable evidence. Upload daily physical transformation photos, completed skill code/art workspaces, or workout video logs with server timestamps.",
+      "Do not just claim discipline—prove it with evidence. Upload daily physical transformation photos, completed skill code/art workspaces, or workout video logs with server timestamps.",
     icon: Camera,
     accentColor: "from-cyan-400 to-teal-400",
     specs: [
       { label: "Media Engine", value: "High-Res PNG, JPG, MP4" },
       { label: "Interactive Cropper", value: "Manual Drag, Zoom & Rotate" },
-      { label: "Verification", value: "Cryptographic SHA Timestamp" },
+      { label: "Verification", value: "Server Timestamp Stamping" },
       { label: "Visibility", value: "Public Feed / Private Archive" },
     ],
     highlights: [
@@ -366,19 +366,19 @@ const SPEC_PILLARS: SpecPillar[] = [
     title: "AI COMPANION",
     subtitle: "Quantum Core AI: Your 24/7 Strategic Transformation Co-Pilot",
     description:
-      "Grounded in your real habit matrix data, streaks, and failure points. Quantum Core AI diagnoses consistency bottlenecks, generates adaptive study schedules, and provides blunt, tactical accountability.",
+      "Grounded in your real habit matrix data, streaks, and failure points. Quantum Core AI diagnoses consistency bottlenecks, generates adaptive study schedules, and provides direct accountability.",
     icon: Brain,
     accentColor: "from-sky-400 to-indigo-400",
     specs: [
-      { label: "Model Engine", value: "Gemini High-Frequency AI" },
+      { label: "Model Engine", value: "Gemini High-Speed AI" },
       { label: "Context Window", value: "Full Habit History & Profile" },
-      { label: "Latency", value: "< 1.2s Response Latency" },
-      { label: "Personality", value: "Tactical, Disciplined, Direct" },
+      { label: "Response", value: "Real-Time Streaming Responses" },
+      { label: "Tone", value: "Tactical, Disciplined, Direct" },
     ],
     highlights: [
       "Adaptive schedule re-planning when habits fall behind",
       "Root cause analysis identifying triggers for missed routines",
-      "Dynamic motivational briefings to ignite immediate execution",
+      "Dynamic briefings to initiate immediate execution",
     ],
   },
 
@@ -389,21 +389,21 @@ const SPEC_PILLARS: SpecPillar[] = [
     category: "verification",
     categoryLabel: "VERIFICATION & AI",
     title: "PERSONAL COMMITMENT CONTRACT",
-    subtitle: "Digital Signature, Moral Obligation & Stakes Protocol",
+    subtitle: "Digital Signature, Personal Integrity & Stakes",
     description:
-      "Before initiating Day 01, every challenger signs an irrevocable Digital Winter Arc Commitment Contract. Put real stakes on the line to make failure psychologically and socially unacceptable.",
+      "Before initiating Day 01, every challenger signs a Digital Winter Arc Commitment Pledge. Put real stakes on the line to make personal consistency non-negotiable.",
     icon: FileCheck,
     accentColor: "from-amber-400 to-rose-500",
     specs: [
-      { label: "Signature", value: "Cryptographic Canvas Signature" },
+      { label: "Signature", value: "Digital Canvas Signature" },
       { label: "Stakes Protocol", value: "Social / Moral / Accountability" },
       { label: "Witness Engine", value: "Squad Co-Signers" },
       { label: "Format", value: "High-DPI Archival Certificate" },
     ],
     highlights: [
-      "Formal legal-grade declaration of non-negotiable intent",
-      "Emergency accountability partner notification system",
-      "Permanent indelibly signed contract stored in profile portfolio",
+      "Personal declaration of non-negotiable intent",
+      "Accountability partner notification capability",
+      "Indelibly signed certificate stored in profile portfolio",
     ],
   },
 
@@ -416,12 +416,12 @@ const SPEC_PILLARS: SpecPillar[] = [
     title: "FINAL TRANSFORMATION",
     subtitle: "90-Day Graduation, Verification & Certified Arc Badge",
     description:
-      "Upon executing Day 90, the system unlocks the Final Transformation Reckoning. Side-by-side Day 1 vs Day 90 visual comparison, verified certificate of completion, and permanent Quantum Hall of Fame induction.",
+      "Upon executing Day 90, the system unlocks the Final Transformation Reckoning: Side-by-side Day 1 vs Day 90 visual comparison, verified certificate of completion, and permanent placement in the Quantum Hall of Discipline.",
     icon: Award,
     accentColor: "from-emerald-400 to-sky-400",
     specs: [
-      { label: "Graduation Quota", value: "90/90 Days Executed" },
-      { label: "Certificate", value: "Cryptographically Verified Serial ID" },
+      { label: "Graduation Quota", value: "90/90 Days (>=80% Pass)" },
+      { label: "Certificate", value: "Verified Serial Certificate ID" },
       { label: "Honor Badge", value: "Permanent Apex Arc Medal" },
       { label: "Alumni Access", value: "Exclusive Veteran Cohorts" },
     ],
@@ -714,13 +714,13 @@ export default function AboutPage() {
             </h2>
 
             <p className="text-slate-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-              Join thousands of challengers locking in for their 90-day transformation. Zero cost, 100% focused discipline.
+              Join the founding cohort locking in for their 90-day transformation. Zero cost, 100% focused discipline.
             </p>
 
             <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
               <Button asChild className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-8 py-6 rounded-xl text-base tracking-wide shadow-[0_0_30px_rgba(56,189,248,0.5)] hover:shadow-[0_0_45px_rgba(56,189,248,0.7)] transition-all flex items-center gap-2">
                 <Link href="/signup">
-                  <span>START YOUR 90-DAY ARC</span>
+                  <span>Start Day 1</span>
                   <ArrowRight size={18} />
                 </Link>
               </Button>

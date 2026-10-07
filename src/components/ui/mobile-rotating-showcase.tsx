@@ -259,11 +259,8 @@ export const MobileRotatingShowcase: React.FC<MobileRotatingShowcaseProps> = ({
 
         {/* Loading Indicator for first batch */}
         {!isReady && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-md rounded-3xl space-y-3">
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm rounded-3xl" aria-label="Loading interactive preview">
             <div className="w-8 h-8 rounded-full border-2 border-sky-400 border-t-transparent animate-spin" />
-            <span className="font-mono text-xs text-sky-300 tracking-wider">
-              QUANTUM FRAME BUFFERING...
-            </span>
           </div>
         )}
       </div>

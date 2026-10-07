@@ -60,6 +60,10 @@ export const LiveProofFeedSection: React.FC = () => {
     return true;
   });
 
+  if (!loading && proofs.length === 0) {
+    return null;
+  }
+
   return (
     <section id="proof-feed" className="py-24 px-4 sm:px-6 relative border-t border-slate-900 bg-slate-950/60 text-slate-100 overflow-hidden">
       {/* Background Cyberpunk Accents */}

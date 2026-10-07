@@ -114,16 +114,21 @@ export const QuantumTypographyVideoSection: React.FC<QuantumTypographyVideoSecti
           {/* Native Typography Video - Instant render with faststart & poster */}
           <video
             ref={videoRef}
-            src="/assets/videos/typography_landing.mp4"
             poster="/assets/videos/typography_poster.jpg"
             autoPlay
             loop
             muted
             playsInline
             controls={false}
-            preload="auto"
+            preload="metadata"
             className="w-full h-full object-cover"
-          />
+            aria-label="Quantum Typography and Architecture Overview"
+          >
+            <source src="/assets/videos/typography_landing.mp4" type="video/mp4" />
+            <p className="p-4 text-xs font-mono text-slate-400">
+              Your browser does not support HTML video playback. Please view the complete architecture on the About page.
+            </p>
+          </video>
 
           {/* ============================================================
               INTERACTIVE CTA OVERLAY ("VIEW FULL ABOUT SPECIFICATION ↗")
@@ -161,26 +166,29 @@ export const QuantumTypographyVideoSection: React.FC<QuantumTypographyVideoSecti
             />
           </Link>
 
-          {/* Subtle Hover Tooltip / Hint */}
+          {/* Real HTML Button Overlay over the video */}
           <div
             className={cn(
-              "absolute bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none transition-all duration-300",
-              "px-4 py-1.5 rounded-full bg-slate-950/80 border border-sky-400/30 backdrop-blur-md",
-              "text-[10px] font-mono text-sky-300 flex items-center gap-2",
-              isCtaHovered ? "opacity-100 scale-100" : "opacity-0 scale-95"
+              "absolute bottom-4 left-1/2 -translate-x-1/2 z-20 transition-all duration-300",
+              "pointer-events-auto"
             )}
           >
-            <Shield size={11} className="text-sky-400" />
-            <span>INTERACTIVE CTA • CLICK TO OPEN SPECIFICATION PAGE</span>
-            <ArrowRight size={11} className="text-sky-300" />
+            <Link
+              href="/about"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/85 hover:bg-slate-900 border border-sky-400/40 text-sky-300 hover:text-white font-mono text-[11px] backdrop-blur-md shadow-lg transition-all"
+            >
+              <Shield size={12} className="text-sky-400" />
+              <span>EXPLORE SPECIFICATION</span>
+              <ArrowRight size={12} className="text-sky-400" />
+            </Link>
           </div>
         </div>
 
         {/* Bottom Bar with Direct Navigation Links */}
         <div className="px-6 py-4 bg-slate-950/95 border-t border-white/[0.08] flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-            <span className="text-sky-400 font-bold">PRO-TIP:</span>
-            <span>Click the button in the video above to explore the complete 15-pillar architecture.</span>
+            <span className="text-sky-400 font-bold">SYSTEM OVERVIEW:</span>
+            <span>Explore all 15 operational pillars and behavioral rules.</span>
           </div>
 
           <Link
