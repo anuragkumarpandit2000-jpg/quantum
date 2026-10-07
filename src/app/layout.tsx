@@ -4,7 +4,7 @@ import { AudioProvider } from "@/components/audio/audio-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://transformationyourself.in"),
+  metadataBase: new URL("https://www.transformationyourself.in"),
   title: {
     default: "QUANTUM — 90-Day Winter Arc Transformation Operating System",
     template: "%s | QUANTUM Winter Arc",
