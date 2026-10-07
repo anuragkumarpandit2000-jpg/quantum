@@ -2,11 +2,22 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyPassword } from "@/lib/utils";
 import { createToken, AUTH_COOKIE_NAME } from "@/lib/auth";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    // 1. IP-level rate limiting: 5 attempts per 15 minutes
+    const ipLimit = checkRateLimit(`login:ip:${ip}`, 5, 15 * 60 * 1000);
+    if (!ipLimit.success) {
+      return NextResponse.json(
+        { error: `Too many login attempts from this network. Please retry in ${ipLimit.resetSeconds} seconds.` },
+        { status: 429, headers: { "Retry-After": String(ipLimit.resetSeconds) } }
+      );
+    }
+
     let body: any;
     try {
       body = await req.json();
@@ -25,7 +36,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const cleanId = identifier.toLowerCase().trim();
+    const cleanId = String(identifier).toLowerCase().trim();
+
+    // 2. Account-level rate limiting: 5 attempts per 15 minutes
+    const idLimit = checkRateLimit(`login:id:${cleanId}`, 5, 15 * 60 * 1000);
+    if (!idLimit.success) {
+      return NextResponse.json(
+        { error: `Too many failed attempts for this account. Please retry in ${idLimit.resetSeconds} seconds.` },
+        { status: 429, headers: { "Retry-After": String(idLimit.resetSeconds) } }
+      );
+    }
 
     const user = await prisma.user.findFirst({
       where: {

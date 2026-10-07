@@ -34,12 +34,57 @@
   --radius: 0.75rem;
 }
 
+html {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
 body {
   background-color: #030712;
   color: #f8fafc;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   overflow-x: hidden;
-  min-height: 100vh;
+  min-height: 100dvh;
+  /* Respect safe-area insets for modern notch & gesture phones */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Accessibility: Strict prefers-reduced-motion honor */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Mobile GPU optimization: reduce heavy blur and shadows on touch devices */
+@media (hover: none) {
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+  .quantum-glow,
+  .quantum-text-glow {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
+
+/* Performance: Content visibility optimization for offscreen landing sections */
+.section-lazy-render {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 700px;
 }
 
 /* Custom Tactical Scrollbars */
@@ -61,6 +106,19 @@ body {
   background: rgba(56, 189, 248, 0.5);
 }
 
+/* Touch-optimized Habit Matrix */
+.matrix-container {
+  touch-action: pan-x pan-y;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.matrix-cell-touch {
+  min-width: 44px;
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
 /* Matrix Table Scrollbar */
 .matrix-scrollbar::-webkit-scrollbar {
   height: 8px;
@@ -76,6 +134,22 @@ body {
 }
 .matrix-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #38bdf8;
+}
+
+/* Surface Hierarchy Tokens (Deep Obsidian System) */
+.surface-canvas {
+  background-color: #030712;
+}
+
+.surface-card {
+  background-color: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.surface-elevated {
+  background-color: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
 }
 
 /* Glow Utilities */

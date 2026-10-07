@@ -204,9 +204,7 @@ export default function AdminPage() {
             ACCESS RESTRICTED // 403
           </h1>
           <p className="text-slate-400 text-sm leading-relaxed font-mono">
-            Super-Admin clearance required. Only authorized sovereign accounts (e.g.{" "}
-            <span className="text-cyan-300">anuragkumar.pandit2000@gmail.com</span>) can access the
-            Quantum Control Matrix.
+            Super-Admin clearance required. Only verified administrator accounts with elevated clearance can access the Quantum Control Matrix.
           </p>
         </div>
 

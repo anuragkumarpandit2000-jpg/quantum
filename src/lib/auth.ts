@@ -2,7 +2,13 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import prisma from "./prisma";
 
-const JWT_SECRET = process.env.JWT_SECRET || "quantum_winter_arc_secret_jwt_key_2025_90days";
+const DEFAULT_SECRET_FALLBACK = "quantum_winter_arc_secret_jwt_key_2025_90days";
+const JWT_SECRET = process.env.JWT_SECRET || DEFAULT_SECRET_FALLBACK;
+
+if (process.env.NODE_ENV === "production" && (!process.env.JWT_SECRET || process.env.JWT_SECRET === DEFAULT_SECRET_FALLBACK)) {
+  console.warn("[SECURITY WARNING] Running in production with default or missing JWT_SECRET! Set a cryptographically random JWT_SECRET in environment variables immediately.");
+}
+
 const AUTH_COOKIE_NAME = "quantum_session";
 
 export interface SessionPayload {
@@ -97,10 +103,13 @@ export async function getCurrentUser(req?: Request) {
   }
 }
 
-export function isAdmin(user?: { email?: string; role?: string } | null): boolean {
+export function isAdmin(user?: { email?: string; role?: string; emailVerified?: boolean } | null): boolean {
   if (!user || !user.email) return false;
+  // Admin privileges strictly require a verified email address
+  if (!user.emailVerified) return false;
+  const adminEmail = (process.env.ADMIN_EMAIL || "anuragkumar.pandit2000@gmail.com").toLowerCase();
   return (
-    user.email.toLowerCase() === "anuragkumar.pandit2000@gmail.com" ||
+    user.email.toLowerCase() === adminEmail ||
     user.role === "ADMIN"
   );
 }

@@ -45,16 +45,40 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
   const [newCategory, setNewCategory] = useState("Core Discipline");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const clickTimeoutRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
+  const longPressTimerRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
+  const isLongPressRef = useRef<{ [key: string]: boolean }>({});
 
-  // 90 Day Headers Array: 1..90
+  // 90 Day Array: 1..90
   const days = Array.from({ length: 90 }, (_, i) => i + 1);
 
-  // Handle Box Click Logic:
-  // Single Click = COMPLETED (Green Check)
-  // Double Click = MISSED (Red Cross)
-  // Clicking an already set box toggles back to PENDING
+  // Long-press detection for touch devices (Requirement 46)
+  const handleTouchStart = (habitId: string, dayNumber: number, currentStatus: string) => {
+    const key = `${habitId}-${dayNumber}`;
+    isLongPressRef.current[key] = false;
+    longPressTimerRef.current[key] = setTimeout(() => {
+      isLongPressRef.current[key] = true;
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        try { navigator.vibrate(40); } catch {}
+      }
+      updateCompletion(habitId, dayNumber, currentStatus === "MISSED" ? "PENDING" : "MISSED");
+    }, 450);
+  };
+
+  const handleTouchEnd = (habitId: string, dayNumber: number) => {
+    const key = `${habitId}-${dayNumber}`;
+    if (longPressTimerRef.current[key]) {
+      clearTimeout(longPressTimerRef.current[key]);
+      delete longPressTimerRef.current[key];
+    }
+  };
+
+  // Handle Box Click Logic (Desktop click/double-click + touch tap)
   const handleBoxClick = (habitId: string, dayNumber: number, currentStatus: string) => {
     const key = `${habitId}-${dayNumber}`;
+    if (isLongPressRef.current[key]) {
+      isLongPressRef.current[key] = false;
+      return;
+    }
 
     if (clickTimeoutRef.current[key]) {
       // Double Click Detected! -> Set to MISSED
@@ -206,17 +230,23 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                   DAY →
                 </th>
 
-                {/* 90 Column Day Headers */}
-                {days.map((day) => (
-                  <th
-                    key={day}
-                    className="px-2 py-3 text-center text-[11px] font-mono font-bold text-slate-400 min-w-[42px] max-w-[42px] border-r border-slate-800/40"
-                  >
-                    <span className={cn(day <= 14 ? "text-sky-300 font-extrabold" : "")}>
-                      {String(day).padStart(2, "0")}
-                    </span>
-                  </th>
-                ))}
+                {/* 90 Column Day Headers with Phase Dividers */}
+                {days.map((day) => {
+                  const isPhaseEnd = day === 30 || day === 60 || day === 90;
+                  return (
+                    <th
+                      key={day}
+                      className={cn(
+                        "px-1 py-3 text-center text-[11px] font-mono font-bold text-slate-400 min-w-[44px] max-w-[44px] border-r border-slate-800/40 select-none",
+                        isPhaseEnd ? "border-r-2 border-r-sky-400/60 bg-sky-950/20" : ""
+                      )}
+                    >
+                      <span className={cn(day <= 14 ? "text-sky-300 font-extrabold" : "")}>
+                        {String(day).padStart(2, "0")}
+                      </span>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
 
@@ -266,16 +296,24 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                       {/* 90 Individual Day Boxes */}
                       {days.map((day) => {
                         const status = completionsMap.get(day) || "PENDING";
+                        const isPhaseEnd = day === 30 || day === 60 || day === 90;
 
                         return (
                           <td
                             key={day}
-                            className="p-1 text-center border-r border-slate-800/40 min-w-[42px] max-w-[42px]"
+                            className={cn(
+                              "p-0.5 text-center border-r border-slate-800/40 min-w-[44px] max-w-[44px]",
+                              isPhaseEnd ? "border-r-2 border-r-sky-400/60" : ""
+                            )}
                           >
                             <button
                               onClick={() => handleBoxClick(habit.id, day, status)}
+                              onTouchStart={() => handleTouchStart(habit.id, day, status)}
+                              onTouchEnd={() => handleTouchEnd(habit.id, day)}
+                              onTouchCancel={() => handleTouchEnd(habit.id, day)}
+                              aria-label={`Habit: ${habit.title}, Day ${day}: ${status}. Tap to complete, long-press to mark missed.`}
                               className={cn(
-                                "w-7 h-7 mx-auto rounded-md flex items-center justify-center transition-all duration-150 text-xs font-bold border",
+                                "w-8 h-8 sm:w-7 sm:h-7 mx-auto rounded-md flex items-center justify-center transition-all duration-150 text-xs font-bold border touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400",
                                 status === "COMPLETED" &&
                                   "bg-emerald-500/20 border-emerald-400 text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.3)] hover:bg-emerald-500/30",
                                 status === "MISSED" &&
@@ -283,7 +321,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                                 status === "PENDING" &&
                                   "bg-slate-900/60 border-slate-800 text-slate-600 hover:border-sky-500/50 hover:text-slate-400"
                               )}
-                              title={`Day ${day}: ${status} (Click: Complete, Double Click: Missed)`}
+                              title={`Day ${day}: ${status} (Tap: Complete, Long-press/Double Click: Missed)`}
                             >
                               {status === "COMPLETED" && <Check size={14} className="stroke-[3]" />}
                               {status === "MISSED" && <X size={14} className="stroke-[3]" />}

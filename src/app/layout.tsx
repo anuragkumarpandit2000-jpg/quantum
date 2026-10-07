@@ -148,6 +148,12 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-quantum-obsidian text-slate-100 min-h-screen antialiased selection:bg-sky-500 selection:text-slate-950 font-sans transition-colors duration-300">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-sky-400 focus:text-slate-950 focus:font-mono focus:font-bold focus:rounded-lg focus:shadow-xl focus:outline-none"
+        >
+          Skip to main content
+        </a>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

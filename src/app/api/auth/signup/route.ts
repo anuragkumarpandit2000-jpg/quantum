@@ -5,11 +5,23 @@ import { createToken, AUTH_COOKIE_NAME } from "@/lib/auth";
 import { validateChallengerEmail } from "@/lib/email-validator";
 import { issueEmailVerificationToken } from "@/lib/email-verification";
 import { sendVerificationEmail, getAppBaseUrl } from "@/lib/email-service";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { validatePasswordStrength, sanitizePlainText } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    // Rate limit: 3 signups per hour per IP
+    const signupLimit = checkRateLimit(`signup:ip:${ip}`, 3, 60 * 60 * 1000);
+    if (!signupLimit.success) {
+      return NextResponse.json(
+        { error: `Registration limit reached for this IP. Please retry in ${Math.ceil(signupLimit.resetSeconds / 60)} minutes.` },
+        { status: 429, headers: { "Retry-After": String(signupLimit.resetSeconds) } }
+      );
+    }
+
     let body: any;
     try {
       body = await req.json();
@@ -28,9 +40,11 @@ export async function POST(req: Request) {
       );
     }
 
-    if (password.length < 6) {
+    // Enforce password strength (min 8 chars, letter + number, max 128)
+    const passwordCheck = validatePasswordStrength(password);
+    if (!passwordCheck.isValid) {
       return NextResponse.json(
-        { error: "Password must be at least 6 characters." },
+        { error: passwordCheck.error || "Password does not meet security requirements." },
         { status: 400 }
       );
     }

@@ -74,7 +74,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-[#030712] text-slate-100 selection:bg-sky-500 selection:text-slate-950 overflow-x-hidden">
+    <main id="main-content" className="relative min-h-screen bg-[#030712] text-slate-100 selection:bg-sky-500 selection:text-slate-950 overflow-x-hidden">
       {/* 3D TubesCursor Interactive Color-Emitting Background Canvas across desktop */}
       <TubesCursor fullPage />
 
@@ -777,6 +777,6 @@ export default function LandingPage() {
       </section>
 
       <LandingFooter />
-    </div>
+    </main>
   );
 }

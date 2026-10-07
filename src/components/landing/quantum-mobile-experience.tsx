@@ -1046,7 +1046,7 @@ export const QuantumMobileExperience: React.FC = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300 text-xs font-mono tracking-widest backdrop-blur-md shadow-[0_0_20px_rgba(56,189,248,0.2)]">
             <Smartphone size={14} className="text-sky-400" />
-            <span>QUANTUM MOBILE EXPERIENCE • NATIVE SYSTEM</span>
+            <span>PWA INSTALL READY • NATIVE APPS COMING SOON</span>
           </div>
 
           <div className="space-y-1">
@@ -1059,7 +1059,7 @@ export const QuantumMobileExperience: React.FC = () => {
           </div>
 
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed font-sans font-normal max-w-2xl mx-auto">
-            Not just a mobile app—your 24/7 personal AI companion, smart circadian alarm, 90-day habit matrix, and real-time competition hub in one uncompromised interface.
+            Install directly on iOS and Android as a high-performance Progressive Web App (PWA) via &ldquo;Add to Home Screen&rdquo;. Native Play Store and App Store builds coming soon.
           </p>
 
           {/* Minimal Feature Tracker Indicator (01 / 19) */}

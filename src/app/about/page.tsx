@@ -471,7 +471,7 @@ export default function AboutPage() {
       <LandingNavbar />
 
       {/* Main Content Container */}
-      <main className="relative z-10 flex-1 pt-28 sm:pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <main id="main-content" className="relative z-10 flex-1 pt-28 sm:pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         {/* Navigation Breadcrumb / Return Link */}
         <div className="mb-8 flex items-center justify-between">
           <Link

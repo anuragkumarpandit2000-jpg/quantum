@@ -545,7 +545,7 @@ export const ExperiencesReviewSection: React.FC = () => {
                       {averageRating.toFixed(1)}
                     </div>
                     <div className="space-y-1">
-                      <div className="flex items-center text-amber-400 text-2xl drop-shadow-[0_0_12px_rgba(251,191,36,0.65)]">
+                      <div className="flex items-center text-amber-400 text-2xl drop-shadow-[0_0_12px_rgba(251,191,36,0.65)]" aria-hidden="true">
                         {[1, 2, 3, 4, 5].map((starIdx) => {
                           const fillPercentage = Math.max(
                             0,
@@ -587,23 +587,30 @@ export const ExperiencesReviewSection: React.FC = () => {
               </div>
 
               {/* 5 Big Clickable Star Buttons */}
-              <div className="flex items-center justify-between gap-2 p-3 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <div
+                role="radiogroup"
+                aria-label="Community rating selection"
+                className="flex items-center justify-between gap-2 p-3 rounded-2xl bg-slate-900/60 border border-slate-800"
+              >
                 {[1, 2, 3, 4, 5].map((starVal) => (
                   <button
                     key={starVal}
                     type="button"
+                    role="radio"
+                    aria-checked={userVotedRating === starVal}
+                    aria-label={`${starVal} out of 5 stars`}
                     onClick={() => handleQuickVote(starVal)}
                     disabled={isVotingSubmitting}
                     className={cn(
-                      "flex-1 py-2.5 rounded-xl border font-mono transition-all duration-200 flex flex-col items-center justify-center gap-1 group/btn",
+                      "flex-1 py-2.5 rounded-xl border font-mono transition-all duration-200 flex flex-col items-center justify-center gap-1 group/btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400",
                       userVotedRating === starVal
                         ? "bg-amber-400/25 border-amber-400 text-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.4)] scale-105"
                         : "bg-slate-950/80 border-slate-800 text-slate-400 hover:border-amber-400/60 hover:text-amber-300 hover:scale-105"
                     )}
-                    title={`Rate ${starVal} Stars`}
                   >
                     <Star
                       size={20}
+                      aria-hidden="true"
                       className={cn(
                         "transition-transform group-hover/btn:scale-110",
                         userVotedRating && userVotedRating >= starVal
@@ -611,7 +618,7 @@ export const ExperiencesReviewSection: React.FC = () => {
                           : "text-slate-600 group-hover/btn:text-amber-400"
                       )}
                     />
-                    <span className="text-[10px] font-bold">{starVal}★</span>
+                    <span className="text-[10px] font-bold" aria-hidden="true">{starVal}★</span>
                   </button>
                 ))}
               </div>

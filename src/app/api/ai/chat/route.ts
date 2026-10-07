@@ -3,6 +3,9 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { quantumCore } from "@/lib/ai/quantum-core";
 
+import { checkRateLimit } from "@/lib/rate-limit";
+import { sanitizePlainText } from "@/lib/sanitize";
+
 export async function POST(req: Request) {
   try {
     const user = await getCurrentUser(req);
@@ -16,6 +19,18 @@ export async function POST(req: Request) {
       );
     }
 
+    // Rate limiting: max 20 AI queries per day (24 hours) per user
+    const aiLimit = checkRateLimit(`ai:user:${user.id}`, 20, 24 * 60 * 60 * 1000);
+    if (!aiLimit.success) {
+      return NextResponse.json(
+        {
+          error: "Daily Quantum Core query allowance reached (20/day). Allowance recharges in 24 hours.",
+          disclaimer: "AI Coach is designed for habit consistency and tactical planning; not medical or mental health advice.",
+        },
+        { status: 429, headers: { "Retry-After": String(aiLimit.resetSeconds) } }
+      );
+    }
+
     const body = await req.json();
     const { message, thinkActive, deepSearchActive, conversationId } = body;
 
@@ -23,7 +38,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
-    const sanitizedMessage = message.trim().slice(0, 4000);
+    const sanitizedMessage = sanitizePlainText(message, 3000);
 
     // Fetch user context: habits, skills, certificate with contract & onboarding dossier
     const [habits, skills, cert] = await Promise.all([
@@ -153,6 +168,7 @@ export async function POST(req: Request) {
       conversationId: convId,
       reply: assistantMsg.content,
       createdAt: assistantMsg.createdAt,
+      disclaimer: "AI Coach - not medical or mental health advice.",
     });
   } catch (error) {
     console.error("POST /api/ai/chat error:", error);
